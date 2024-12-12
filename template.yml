@@ -1,9 +1,19 @@
+Transform: AWS::Serverless-2016-10-31
+
 Resources:
-  User:
+  mysql2:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: .
+      CompatibleRuntimes:
+        - nodejs22.x
+    Metadata:
+      BuildMethod: nodejs22.x
+  user:
     Type: AWS::Serverless::Function
     # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: /user
+      CodeUri: ./function/user
       Handler: index.handler
       Runtime: nodejs22.x
       Environment:
@@ -13,12 +23,17 @@ Resources:
       Timeout: 30
       Architectures:
         - arm64
+      Layers:
+        - !Ref mysql2
     # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-using-build-typescript.html
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
         EntryPoints:
-          - index.ts
+          - index.mts
+        External:
+          - '@aws-sdk/*'
+          - aws-sdk
         Minify: false # Specifies whether to minify the bundled output code. The default value is true.
         #Specifies the list of packages to omit from the build
         # External:
