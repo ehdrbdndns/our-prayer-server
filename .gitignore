@@ -1,5 +1,7 @@
 *.aws-sam
 
+index.js
+
 mysql2.ts
 
 # keys
