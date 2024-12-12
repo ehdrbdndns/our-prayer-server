@@ -4,7 +4,7 @@ Resources:
   mysql2:
     Type: AWS::Serverless::LayerVersion
     Properties:
-      ContentUri: .
+      ContentUri: './layer/mysql2'
       CompatibleRuntimes:
         - nodejs22.x
     Metadata:
@@ -30,7 +30,7 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         EntryPoints:
-          - index.mts
+          - handler.ts
         External:
           - '@aws-sdk/*'
           - aws-sdk
