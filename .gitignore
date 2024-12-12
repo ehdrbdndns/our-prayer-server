@@ -1,7 +1,9 @@
 *.aws-sam
 
+mysql2.ts
+
 # keys
-keys.ts
+keys.*
 
 # deploy.sh
 deploy.sh
@@ -136,3 +138,4 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+layer/mysql2/mysql2.ts
