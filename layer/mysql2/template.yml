@@ -1,0 +1,12 @@
+# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-layerversion.html
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  Mysql2:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: .
+      CompatibleRuntimes:
+        - nodejs22.x
+    Metadata:
+      BuildMethod: nodejs22.x
