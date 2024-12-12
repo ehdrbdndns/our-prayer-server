@@ -2,7 +2,8 @@
   "name": "mysql2",
   "version": "1.0.0",
   "description": "mysql2 layer for aws lambda",
-  "main": "index.js",
+  "main": "mysql2.js",
+  "type": "commonjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
