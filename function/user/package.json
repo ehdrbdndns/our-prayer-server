@@ -1,0 +1,14 @@
+{
+  "name": "user",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/aws-lambda": "~8"
+  },
+  "dependencies": {
+    "customMysql": "../../layer/mysql2/customMysql",
+    "customJwt": "../../layer/jwt/customJwt",
+    "jsonwebtoken": "../../layer/jwt/node_modules/jsonwebtoken",
+    "@types/jsonwebtoken": "../../layer/jwt/node_modules/@types/jsonwebtoken"
+  }
+}
