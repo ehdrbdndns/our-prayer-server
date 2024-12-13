@@ -28,7 +28,7 @@ Resources:
     # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
       CodeUri: ./function/user
-      Handler: index.handler
+      Handler: handler.handler
       Runtime: nodejs22.x
       Environment:
         Variables:
