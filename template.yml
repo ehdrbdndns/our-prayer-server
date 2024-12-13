@@ -4,23 +4,25 @@ Resources:
   jwt:
     Type: AWS::Serverless::LayerVersion
     Properties:
-      ContentUri: './layer/jwt'
+      ContentUri: ./layer/jwt
       CompatibleArchitectures:
         - arm64
       CompatibleRuntimes:
         - nodejs22.x
     Metadata:
       BuildMethod: nodejs22.x
+      BuildArchitecture: arm64
   mysql2:
     Type: AWS::Serverless::LayerVersion
     Properties:
-      ContentUri: './layer/mysql2'
+      ContentUri: ./layer/mysql2
       CompatibleArchitectures:
         - arm64
       CompatibleRuntimes:
         - nodejs22.x
     Metadata:
       BuildMethod: nodejs22.x
+      BuildArchitecture: arm64
   user:
     Type: AWS::Serverless::Function
     # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
@@ -38,6 +40,13 @@ Resources:
       Layers:
         - !Ref mysql2
         - !Ref jwt
+      Events:
+        ourprayerPOSTuserauth:
+          Type: Api
+          Properties:
+            Path: /user/auth
+            Method: POST
+            RestApiId: !Ref ourprayer
     # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-using-build-typescript.html
     Metadata:
       BuildMethod: esbuild
@@ -47,7 +56,39 @@ Resources:
         External:
           - '@aws-sdk/*'
           - aws-sdk
+          - customMysql
+          - customJwt
+          - esbuild
         Minify: false # Specifies whether to minify the bundled output code. The default value is true.
         #Specifies the list of packages to omit from the build
         # External:
         #   - "<package-to-exclude>"
+  ourprayer:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub
+        - ${ResourceName} From Stack ${AWS::StackName}
+        - ResourceName: ourprayer
+      StageName: Prod
+      DefinitionBody:
+        openapi: '3.0'
+        info: {}
+        paths:
+          /user/auth:
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${user.Arn}/invocations
+              responses: {}
+      EndpointConfiguration: REGIONAL
+      TracingEnabled: true
+      Cors:
+        MaxAge: 5
+Metadata:
+  AWS::Composer::Groups:
+    Group:
+      Label: Layer
+      Members:
+        - jwt
+        - mysql2

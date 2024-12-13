@@ -6,9 +6,8 @@
     "@types/aws-lambda": "~8"
   },
   "dependencies": {
-    "customMysql": "../../layer/mysql2/customMysql",
+    "esbuild": "^0.24.0",
     "customJwt": "../../layer/jwt/customJwt",
-    "jsonwebtoken": "../../layer/jwt/node_modules/jsonwebtoken",
-    "@types/jsonwebtoken": "../../layer/jwt/node_modules/@types/jsonwebtoken"
+    "customMysql": "../../layer/mysql2/customMysql"
   }
 }

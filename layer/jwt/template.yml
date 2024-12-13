@@ -11,3 +11,4 @@ Resources:
         - nodejs22.x
     Metadata:
       BuildMethod: nodejs22.x
+      BuildArchitecture: arm64
