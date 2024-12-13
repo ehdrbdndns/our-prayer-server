@@ -1,0 +1,13 @@
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  jwt:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: '.'
+      CompatibleArchitectures:
+        - arm64
+      CompatibleRuntimes:
+        - nodejs22.x
+    Metadata:
+      BuildMethod: nodejs22.x

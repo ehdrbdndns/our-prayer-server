@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "strict": true,
+    "preserveConstEnums": true,
+    "sourceMap": false,
+    "moduleResolution":"node",
+    "esModuleInterop": true, 
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true, 
+    "isolatedModules": true, 
+
+    //other configs
+    "noEmit": false,
+    "rootDir": ".",
+    "outDir": ".aws-sam/build/jwt/nodejs", // "../../.aws-sam/build/YourLayer/nodejs"
+    "module": "commonjs"
+    // more configs
+    
+  },
+  "exclude": ["node_modules", "**/*.test.ts"]
+}
