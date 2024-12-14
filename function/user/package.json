@@ -6,8 +6,10 @@
     "@types/aws-lambda": "~8"
   },
   "dependencies": {
-    "esbuild": "^0.24.0",
     "customJwt": "../../layer/jwt/customJwt",
-    "customMysql": "../../layer/mysql2/customMysql"
+    "customMysql": "../../layer/mysql2/customMysql",
+    "esbuild": "^0.24.0",
+    "uuid": "^11.0.3",
+    "mysql2": "../../layer/mysql2/node_modules/mysql2"
   }
 }
