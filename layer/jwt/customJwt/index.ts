@@ -1,10 +1,10 @@
-import jwt from 'jsonwebtoken';
+import * as jwt from 'jsonwebtoken';
 import { JWT_SECRET_KEY } from './keys';
 
 const TOKEN_EXPIRES_IN = '90d';
 
-interface Payload {
-  user_id: string;
+export interface Payload {
+  user_id?: string;
 }
 
 export const generateToken = (payload: Payload) => {
@@ -13,7 +13,7 @@ export const generateToken = (payload: Payload) => {
   return token;
 };
 
-export const verifyToken = (token: string): Payload | {} => {
+export const verifyToken = (token: string): Payload => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET_KEY) as Payload;
     return decoded;
