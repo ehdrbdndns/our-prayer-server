@@ -1,8 +1,8 @@
 import { Context, APIGatewayEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { handler as auth } from './auth/index'
+import { authHandler } from './auth/index'
 
 const router: { [key: string]: (event: APIGatewayEvent, context: Context) => Promise<APIGatewayProxyResult> } = {
-  "/user/auth": auth,
+  "/user/auth": authHandler,
 }
 
 export const handler = async (event: APIGatewayEvent, context: Context): Promise<APIGatewayProxyResult> => {
