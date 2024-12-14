@@ -30,6 +30,7 @@ Resources:
           - customMysql
           - customJwt
           - esbuild
+          - mysql2
         Minify: false # Specifies whether to minify the bundled output code. The default value is true.
         #Specifies the list of packages to omit from the build
         # External:
