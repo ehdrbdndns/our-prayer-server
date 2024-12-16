@@ -27,7 +27,8 @@ export const register = async (ret: { userType: 'local' | 'sns' }): Promise<{
   message: string
 } | {
   accessToken: string,
-  refreshToken: string
+  refreshToken: string,
+  name: string
 }> => {
   if (!ret.userType && ret.userType !== 'local' && ret.userType !== 'sns') {
     return {
@@ -90,8 +91,9 @@ export const register = async (ret: { userType: 'local' | 'sns' }): Promise<{
       await conn.commit();
 
       return {
+        name,
         accessToken: accessToken,
-        refreshToken: refresh_token
+        refreshToken: refresh_token,
       }
     } catch (e) {
       await conn.rollback();
