@@ -1,0 +1,20 @@
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "our-pray"
+resolve_s3 = true
+s3_prefix = "our-pray"
+region = "ap-northeast-2"
+capabilities = [ "CAPABILITY_IAM", "CAPABILITY_NAMED_IAM" ]
+image_repositories = [ ]
+confirm_changeset = false
+
+[default.build.parameters]
+template_file = "/Users/donggyunyang/code/our-prayer-server/template.yml"
+cached = true
+parallel = true
+use_container = true
+
+[default.global.parameters]
+stack_name = "our-pray"
+region = "ap-northeast-2"

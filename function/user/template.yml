@@ -1,10 +1,12 @@
+Transform: AWS::Serverless-2016-10-31
+
 Resources:
-  User:
+  user:
     Type: AWS::Serverless::Function
     # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
     Properties:
-      CodeUri: /user
-      Handler: index.handler
+      CodeUri: .
+      Handler: handler.handler
       Runtime: nodejs22.x
       Environment:
         Variables:
@@ -13,12 +15,22 @@ Resources:
       Timeout: 30
       Architectures:
         - arm64
+      Layers:
+        - !Ref mysql2
+        - !Ref jwt
     # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-using-build-typescript.html
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
         EntryPoints:
-          - index.ts
+          - handler.ts
+        External:
+          - '@aws-sdk/*'
+          - aws-sdk
+          - customMysql
+          - customJwt
+          - esbuild
+          - mysql2
         Minify: false # Specifies whether to minify the bundled output code. The default value is true.
         #Specifies the list of packages to omit from the build
         # External:
