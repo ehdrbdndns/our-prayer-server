@@ -38,7 +38,7 @@ async function handleDelete(req: any): Promise<APIGatewayProxyResult> {
 
 export const authHandler = async (event: APIGatewayEvent, context: Context): Promise<APIGatewayProxyResult> => {
   try {
-    const req = event.queryStringParameters || JSON.parse(event.body || "");
+    const req = event.queryStringParameters || JSON.parse(event.body || "{}");
     const HttpMethod = event.requestContext.httpMethod;
 
     const jwtToken = (event.headers && (event.headers.Authorization || event.headers.authorization) || '').replace('Bearer ', '');

@@ -60,10 +60,43 @@ Resources:
           - customJwt
           - esbuild
           - mysql2
-        Minify: false # Specifies whether to minify the bundled output code. The default value is true.
-        #Specifies the list of packages to omit from the build
-        # External:
-        #   - "<package-to-exclude>"
+  bible:
+    Type: AWS::Serverless::Function
+    # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: ./function/bible
+      Handler: handler.handler
+      Runtime: nodejs22.x
+      Environment:
+        Variables:
+          NODE_OPTIONS: '--enable-source-maps'
+      MemorySize: 3008
+      Timeout: 30
+      Architectures:
+        - arm64
+      Layers:
+        - !Ref mysql2
+        - !Ref jwt
+      Events:
+        ourprayerGETbible:
+          Type: Api
+          Properties:
+            Path: /bible
+            Method: GET
+            RestApiId: !Ref ourprayer
+    # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-using-build-typescript.html
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - handler.ts
+        External:
+          - '@aws-sdk/*'
+          - aws-sdk
+          - customMysql
+          - customJwt
+          - esbuild
+        Minify: false
   ourprayer:
     Type: AWS::Serverless::Api
     Properties:
@@ -82,13 +115,20 @@ Resources:
                 type: aws_proxy
                 uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${user.Arn}/invocations
               responses: {}
+          /bible:
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${bible.Arn}/invocations
+              responses: {}
       EndpointConfiguration: REGIONAL
       TracingEnabled: true
       Cors:
         MaxAge: 86400
         AllowOrigin: '''*'''
         AllowHeaders: '''Authorization, Content-Type, Access-Control-Allow-Origin'''
-        AllowMethods: '''POST, OPTIONS'''
+        AllowMethods: '''POST, GET, OPTIONS'''
 Metadata:
   AWS::Composer::Groups:
     Group:
