@@ -6,11 +6,11 @@ import { register } from "./register";
 async function handlePost(req: any): Promise<APIGatewayProxyResult> {
   const ret = await register(req);
   return {
-    statusCode: 200,
+    statusCode: ret.statusCode,
     headers: {
       "Access-Control-Allow-Origin": "*",
     },
-    body: JSON.stringify(ret),
+    body: JSON.stringify(ret.data),
   };
 }
 

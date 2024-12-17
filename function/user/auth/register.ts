@@ -24,15 +24,24 @@ function generateRandomChristianName(): string {
 }
 
 export const register = async (ret: { userType: 'local' | 'sns' }): Promise<{
-  message: string
+  statusCode?: number,
+  data: {
+    message: string
+  }
 } | {
-  accessToken: string,
-  refreshToken: string,
-  name: string
+  statusCode?: number,
+  data: {
+    accessToken: string,
+    refreshToken: string,
+    name: string
+  }
 }> => {
   if (!ret.userType && ret.userType !== 'local' && ret.userType !== 'sns') {
     return {
-      message: "bad request"
+      statusCode: 400,
+      data: {
+        message: "bad request"
+      }
     }
   }
 
@@ -91,9 +100,12 @@ export const register = async (ret: { userType: 'local' | 'sns' }): Promise<{
       await conn.commit();
 
       return {
-        name,
-        accessToken: accessToken,
-        refreshToken: refresh_token,
+        statusCode: 200,
+        data: {
+          name,
+          accessToken: accessToken,
+          refreshToken: refresh_token,
+        }
       }
     } catch (e) {
       await conn.rollback();
