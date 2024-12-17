@@ -9,7 +9,7 @@ export interface UserType {
   created_date: string;
 }
 
-export interface UserState {
+export interface UserStateType {
   user_state_id: string;
   user_id: string;
   role: 'admin' | 'counselor' | 'user';
@@ -24,4 +24,11 @@ export interface RefreshToken {
   user_id: string;
   token: string;
   expires_date: string;
+}
+
+export interface BibleType {
+  bible_quote_id: string;
+  title: string;
+  content: string;
+  created_date: string;
 }
