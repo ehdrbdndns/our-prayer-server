@@ -85,7 +85,10 @@ Resources:
       EndpointConfiguration: REGIONAL
       TracingEnabled: true
       Cors:
-        MaxAge: 5
+        MaxAge: 86400
+        AllowOrigin: '''*'''
+        AllowHeaders: '''Authorization, Content-Type, Access-Control-Allow-Origin'''
+        AllowMethods: '''POST, OPTIONS'''
 Metadata:
   AWS::Composer::Groups:
     Group:
