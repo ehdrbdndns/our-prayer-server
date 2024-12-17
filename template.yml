@@ -96,6 +96,7 @@ Resources:
           - customMysql
           - customJwt
           - esbuild
+        Minify: false
   ourprayer:
     Type: AWS::Serverless::Api
     Properties:
@@ -117,7 +118,7 @@ Resources:
           /bible:
             get:
               x-amazon-apigateway-integration:
-                httpMethod: GET
+                httpMethod: POST
                 type: aws_proxy
                 uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${bible.Arn}/invocations
               responses: {}
