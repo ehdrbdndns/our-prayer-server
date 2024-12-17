@@ -1,6 +1,7 @@
 import { APIGatewayEvent, APIGatewayProxyResult, Context } from "aws-lambda";
 import { Payload, verifyToken } from 'customJwt';
 import { promisePool } from 'customMysql';
+import { BibleType } from "../dataType";
 
 async function handleGet(): Promise<APIGatewayProxyResult> {
   try {
@@ -11,10 +12,12 @@ async function handleGet(): Promise<APIGatewayProxyResult> {
     LIMIT 1
     `);
 
+    const data = rows[0] as Omit<BibleType, 'bible_quote_id' | 'created_date'>;
+
     return {
       statusCode: 200,
-      body: JSON.stringify(rows[0]),
-    };
+      body: JSON.stringify(data),
+    }
   } catch (e) {
     console.error(e);
     return {
