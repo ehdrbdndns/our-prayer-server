@@ -43,6 +43,27 @@ export interface PrayerHistoryType {
   updated_date: number;
 }
 
+export interface PlanType {
+  plan_id: string;
+  title: string;
+  description: string;
+  author_name: string;
+  author_description: string;
+  author_profile: string;
+  thumbnail: string;
+  s_thumbnail: string;
+  is_active: boolean;
+  created_date: number; // UTC timestamp
+  updated_date: number; // UTC timestamp
+}
+
+export interface PlanLikeType {
+  plan_like_id: string;
+  user_id: string;
+  plan_id: string;
+  created_date: string;
+}
+
 export interface Session {
   user_id: string;
 }
