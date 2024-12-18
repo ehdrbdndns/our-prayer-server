@@ -32,3 +32,17 @@ export interface BibleType {
   content: string;
   created_date: string;
 }
+
+export interface PrayerHistoryType {
+  prayer_history_id: string;
+  user_id: string;
+  lecture_id: string;
+  duration: number;
+  note: string;
+  created_date: number;
+  updated_date: number;
+}
+
+export interface Session {
+  user_id: string;
+}
