@@ -1,7 +1,7 @@
 import { APIGatewayEvent, APIGatewayProxyResult, Context } from "aws-lambda";
 import { generateToken, Payload, verifyToken } from 'customJwt';
 import { promisePool } from 'customMysql';
-import { PlanType, Session } from "../dataType";
+import { Session } from "../dataType";
 
 const generateTokenByRefreshToken = async (refreshToken: string) => {
   try {
@@ -37,7 +37,7 @@ async function handleGet({
   const { user_id } = session;
 
   try {
-    const [rows]: any = await promisePool.query(`
+    const [plans]: any = await promisePool.query(`
       SELECT
         plan.plan_id, title, description, 
         author_name, author_description, author_profile,
@@ -56,12 +56,26 @@ async function handleGet({
       WHERE is_active = 1
     `, [user_id]);
 
+    const [currentPlan]: any = await promisePool.query(`
+      SELECT lecture.plan_id
+      FROM prayer_history
+
+        INNER JOIN lecture ON prayer_history.lecture_id = lecture.lecture_id
+
+      WHERE prayer_history.user_id = ?
+      ORDER BY prayer_history.created_date DESC
+      LIMIT 1
+    `, [user_id]);
+
     return {
       statusCode: 200,
       headers: {
         "Access-Control-Allow-Origin": "*",
       },
-      body: JSON.stringify(rows),
+      body: JSON.stringify({
+        plans,
+        currentPlan: currentPlan.length > 0 ? currentPlan[0] : null
+      }),
     }
   } catch (e) {
     console.error(e);
