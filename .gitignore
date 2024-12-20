@@ -141,5 +141,3 @@ dist
 .yarn/install-state.gz
 .pnp.*
 layer/mysql2/mysql2.ts
-
-launch.json

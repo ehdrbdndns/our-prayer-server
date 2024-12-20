@@ -1,10 +1,8 @@
 import { Context, APIGatewayEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { userPlanHandler } from './userPlan';
-import { planHandler } from './plan';
 
 const router: { [key: string]: (event: APIGatewayEvent, context: Context) => Promise<APIGatewayProxyResult> } = {
   "/plan/user": userPlanHandler,
-  "/plan": planHandler
 }
 
 export const handler = async (event: APIGatewayEvent, context: Context): Promise<APIGatewayProxyResult> => {

@@ -2,7 +2,6 @@ import { APIGatewayEvent, APIGatewayProxyResult, Context } from "aws-lambda";
 import { generateToken, Payload, verifyToken } from 'customJwt';
 import { promisePool } from 'customMysql';
 import { PlanType, Session } from "../dataType";
-import { v4 as uuidv4 } from 'uuid';
 
 const generateTokenByRefreshToken = async (refreshToken: string) => {
   try {
@@ -69,91 +68,6 @@ async function handleGet({ session }: {
   }
 }
 
-async function handlePost({ session, req }: {
-  session: Session, req: { plan_id: string }
-}): Promise<APIGatewayProxyResult> {
-  try {
-    const plan_id = req.plan_id;
-    const plan_like_id = uuidv4();
-    const user_id = session.user_id;
-
-    const [rows] = await promisePool.query(`
-    INSERT INTO plan_like
-    (plan_like_id, plan_id, user_id)
-    VALUES (?, ?, ?)
-    `, [plan_like_id, plan_id, user_id]) as [{ affectedRows: number }, unknown];
-
-    if (rows.affectedRows === 0) {
-      return {
-        statusCode: 500,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-        },
-        body: JSON.stringify({ message: "internal server error" }),
-      };
-    }
-
-    return {
-      statusCode: 200,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify({ message: "success" }),
-    }
-  } catch (e) {
-    console.error(e);
-    return {
-      statusCode: 500,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify({ message: "internal server error" }),
-    };
-  }
-}
-
-async function handleDelete({ session, req }: {
-  session: Session, req: { plan_like_id: string }
-}): Promise<APIGatewayProxyResult> {
-  try {
-    const plan_like_id = req.plan_like_id;
-    const user_id = session.user_id;
-
-    const [rows] = await promisePool.query(`
-    DELETE FROM plan_like
-    WHERE plan_like_id = ?
-      AND user_id = ?
-    `, [plan_like_id, user_id]) as [{ affectedRows: number }, unknown];
-
-    if (rows.affectedRows === 0) {
-      return {
-        statusCode: 500,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-        },
-        body: JSON.stringify({ message: "internal server error" }),
-      };
-    }
-
-    return {
-      statusCode: 200,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify({ message: "success" }),
-    }
-  } catch (e) {
-    console.error(e);
-    return {
-      statusCode: 500,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify({ message: "internal server error" }),
-    };
-  }
-}
-
 export const userPlanHandler = async (event: APIGatewayEvent, context: Context): Promise<APIGatewayProxyResult> => {
   try {
     const req = event.queryStringParameters || JSON.parse(event.body || "{}");
@@ -194,12 +108,6 @@ export const userPlanHandler = async (event: APIGatewayEvent, context: Context):
     switch (HttpMethod.toLowerCase()) {
       case "get":
         response = await handleGet({ session, req });
-        break;
-      case "post":
-        response = await handlePost({ session, req });
-        break;
-      case "delete":
-        response = await handleDelete({ session, req });
         break;
       default:
         response = {

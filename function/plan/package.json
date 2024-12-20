@@ -8,7 +8,6 @@
   "dependencies": {
     "customJwt": "../../layer/jwt/customJwt",
     "customMysql": "../../layer/mysql2/customMysql",
-    "esbuild": "^0.24.0",
-    "uuid": "^11.0.3"
+    "esbuild": "^0.24.0"
   }
 }
