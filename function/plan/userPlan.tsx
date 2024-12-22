@@ -119,6 +119,16 @@ async function handleDelete({ session, req }: {
     const plan_like_id = req.plan_like_id;
     const user_id = session.user_id;
 
+    if (!plan_like_id) {
+      return {
+        statusCode: 400,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({ message: "bad request" }),
+      }
+    }
+
     const [rows] = await promisePool.query(`
     DELETE FROM plan_like
     WHERE plan_like_id = ?
