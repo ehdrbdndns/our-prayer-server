@@ -43,6 +43,7 @@ async function handleGet({
         author_name, author_description, author_profile,
         thumbnail, s_thumbnail,
         IFNULL(plan_like.user_id, 0) AS is_liked,
+        IFNULL(plan_like.plan_like_id, 0) AS plan_like_id,
         UNIX_TIMESTAMP(plan_lecture_audit.updated_date) AS audit_updated_date
       FROM plan
 
