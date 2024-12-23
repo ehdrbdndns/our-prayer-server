@@ -77,6 +77,16 @@ async function handlePost({ session, req }: {
     const plan_like_id = uuidv4();
     const user_id = session.user_id;
 
+    if (!plan_id) {
+      return {
+        statusCode: 400,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({ message: "bad request" }),
+      }
+    }
+
     const [rows] = await promisePool.query(`
     INSERT INTO plan_like
     (plan_like_id, plan_id, user_id)
@@ -98,7 +108,7 @@ async function handlePost({ session, req }: {
       headers: {
         "Access-Control-Allow-Origin": "*",
       },
-      body: JSON.stringify({ message: "success" }),
+      body: JSON.stringify({ message: "success", plan_like_id }),
     }
   } catch (e) {
     console.error(e);
@@ -150,7 +160,7 @@ async function handleDelete({ session, req }: {
       headers: {
         "Access-Control-Allow-Origin": "*",
       },
-      body: JSON.stringify({ message: "success" }),
+      body: JSON.stringify({ message: "success", plan_like_id }),
     }
   } catch (e) {
     console.error(e);
