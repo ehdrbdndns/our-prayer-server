@@ -29,15 +29,16 @@ const generateTokenByRefreshToken = async (refreshToken: string) => {
 }
 
 async function handleGet({
-  session
+  session, req
 }: {
-  session: Session
+  session: Session, req: { plan_id?: string }
 }): Promise<APIGatewayProxyResult> {
 
   const { user_id } = session;
-
+  const { plan_id } = req;
   try {
-    const [plans]: any = await promisePool.query(`
+    if (plan_id === undefined) {
+      const [plans]: any = await promisePool.query(`
       SELECT
         plan.plan_id, title, description,
         author_name, author_description, author_profile,
@@ -57,7 +58,7 @@ async function handleGet({
       WHERE is_active = 1
     `, [user_id]);
 
-    const [currentPlan]: any = await promisePool.query(`
+      const [currentPlan]: any = await promisePool.query(`
       SELECT lecture.plan_id
       FROM prayer_history
 
@@ -68,15 +69,61 @@ async function handleGet({
       LIMIT 1
     `, [user_id]);
 
-    return {
-      statusCode: 200,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify({
-        plans,
-        currentPlan: currentPlan.length > 0 ? currentPlan[0] : null
-      }),
+      return {
+        statusCode: 200,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({
+          plans,
+          currentPlan: currentPlan.length > 0 ? currentPlan[0] : null
+        }),
+      }
+    } else {
+      const [plan]: any = await promisePool.query(`
+      SELECT 
+          plan.plan_id, title, description
+          , thumbnail, s_thumbnail, type, is_active
+          , author_name, author_description, author_profile, author_deeplink
+          , IF(plan_like.plan_like_id IS NOT NULL, 1, 0) AS is_liked
+          , IFNULL(plan_like.plan_like_id, 0) AS plan_like_id
+      FROM plan
+
+        LEFT JOIN plan_like 
+          ON plan.plan_id = plan_like.plan_id
+            AND plan_like.user_id = ?
+
+      WHERE plan.plan_id = ?
+      `, [user_id, plan_id]);
+
+      if (plan.length === 0) {
+        return {
+          statusCode: 404,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+          },
+          body: JSON.stringify({ message: "not found" }),
+        }
+      }
+
+      const [lectures]: any = await promisePool.query(`
+      SELECT
+        lecture_id, title, description
+      FROM lecture
+      WHERE plan_id = ?
+        AND is_active = 1
+      `, [plan_id]);
+
+      return {
+        statusCode: 200,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({
+          plan: plan[0],
+          lectures
+        }),
+      }
     }
   } catch (e) {
     console.error(e);
@@ -129,7 +176,7 @@ export const planHandler = async (event: APIGatewayEvent, context: Context): Pro
 
     switch (HttpMethod.toLowerCase()) {
       case "get":
-        response = await handleGet({ session });
+        response = await handleGet({ session, req });
         break;
       default:
         response = {
