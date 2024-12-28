@@ -136,6 +136,75 @@ async function handlePut({
   }
 }
 
+async function handleDelete({
+  session
+}: {
+  session: Session
+}): Promise<APIGatewayProxyResult> {
+  const conn = await promisePool.getConnection();
+
+  try {
+    const { user_id } = session;
+    await conn.beginTransaction();
+
+    // update user_state
+    const [userStateRows] = await conn.query(`
+    UPDATE user_state
+    SET status = 'inactive', updated_date = NOW()
+    WHERE user_id = ?
+    `, [user_id]) as [{ affectedRows: number }, unknown];
+
+    if (userStateRows.affectedRows === 0) {
+      return {
+        statusCode: 500,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({ message: "internal server error" }),
+      };
+    }
+
+    // expire refresh_token
+    const [refreshTokenRows] = await conn.query(`
+    UPDATE refresh_token
+    SET expires_date = NOW()
+    WHERE user_id = ?
+    `, [user_id]) as [{ affectedRows: number }, unknown];
+
+    if (refreshTokenRows.affectedRows === 0) {
+      return {
+        statusCode: 500,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({ message: "internal server error" }),
+      };
+    }
+
+    await conn.commit();
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({ message: "success" }),
+    }
+  } catch (e) {
+    console.error(e);
+    await conn.rollback();
+    return {
+      statusCode: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({ message: "internal server error" }),
+    };
+  } finally {
+    conn.release();
+  }
+}
+
 export const userHandler = async (event: APIGatewayEvent, context: Context): Promise<APIGatewayProxyResult> => {
   try {
     const req = event.queryStringParameters || JSON.parse(event.body || "{}");
@@ -179,6 +248,9 @@ export const userHandler = async (event: APIGatewayEvent, context: Context): Pro
         break;
       case "put":
         response = await handlePut({ session, req });
+        break;
+      case "delete":
+        response = await handleDelete({ session });
         break;
       default:
         response = {
