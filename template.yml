@@ -120,6 +120,48 @@ Resources:
             Path: /history
             Method: GET
             RestApiId: !Ref ourprayer
+        ourprayerPOSThistory:
+          Type: Api
+          Properties:
+            Path: /history
+            Method: POST
+            RestApiId: !Ref ourprayer
+    # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-using-build-typescript.html
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - handler.ts
+        External:
+          - '@aws-sdk/*'
+          - aws-sdk
+          - customMysql
+          - customJwt
+          - esbuild
+  lecture:
+    Type: AWS::Serverless::Function
+    # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: ./function/lecture
+      Handler: handler.handler
+      Runtime: nodejs22.x
+      Environment:
+        Variables:
+          NODE_OPTIONS: '--enable-source-maps'
+      MemorySize: 3008
+      Timeout: 30
+      Architectures:
+        - arm64
+      Layers:
+        - !Ref mysql2
+        - !Ref jwt
+      Events:
+        ourprayerGETlecture:
+          Type: Api
+          Properties:
+            Path: /lecture
+            Method: GET
+            RestApiId: !Ref ourprayer
     # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-using-build-typescript.html
     Metadata:
       BuildMethod: esbuild
@@ -218,6 +260,12 @@ Resources:
                 type: aws_proxy
                 uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${history.Arn}/invocations
               responses: {}
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${history.Arn}/invocations
+              responses: {}
           /plan/user:
             get:
               x-amazon-apigateway-integration:
@@ -244,6 +292,13 @@ Resources:
                 type: aws_proxy
                 uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${plan.Arn}/invocations
               responses: {}
+          /lecture:
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lecture.Arn}/invocations
+              responses: {}
       EndpointConfiguration: REGIONAL
       TracingEnabled: true
       Cors:
@@ -258,3 +313,11 @@ Metadata:
       Members:
         - jwt
         - mysql2
+    Group2:
+      Label: Function
+      Members:
+        - user
+        - bible
+        - history
+        - plan
+        - lecture

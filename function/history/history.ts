@@ -2,6 +2,7 @@ import { APIGatewayEvent, APIGatewayProxyResult, Context } from "aws-lambda";
 import { generateToken, Payload, verifyToken } from 'customJwt';
 import { promisePool } from 'customMysql';
 import { PrayerHistoryType, Session } from "../dataType";
+import { v4 as uuidv4 } from 'uuid';
 
 const generateTokenByRefreshToken = async (refreshToken: string) => {
   try {
@@ -78,6 +79,69 @@ async function handleGet({
   }
 }
 
+async function handlePost({
+  session, req
+}: {
+  session: Session, req: { lecture_id: string, duration: string, note: string }
+}): Promise<APIGatewayProxyResult> {
+  try {
+    const { user_id } = session;
+    const { lecture_id, duration, note } = req;
+
+    if (!lecture_id || !duration || !note) {
+      return {
+        statusCode: 400,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({ message: "bad request" }),
+      }
+    }
+
+    const prayer_history_id = uuidv4();
+
+    const [rows] = await promisePool.query(`
+    INSERT INTO prayer_history
+    (prayer_history_id, user_id, lecture_id, duration, note)
+    VALUES
+    (?, ?, ?, ?, ?)
+    ON DUPLICATE KEY UPDATE
+    user_id = VALUES(user_id),
+    lecture_id = VALUES(lecture_id),
+    duration = VALUES(duration),
+    note = VALUES(note)
+    `, [prayer_history_id, user_id, lecture_id, Number(duration), note]
+    ) as [{ affectedRows: number }, unknown];
+
+    if (rows.affectedRows === 0) {
+      return {
+        statusCode: 500,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({ message: "internal server error" }),
+      };
+    }
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({ prayer_history_id }),
+    };
+  } catch (e) {
+    console.error(e);
+    return {
+      statusCode: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({ message: "internal server error" }),
+    };
+  }
+}
+
 export const historyHandler = async (event: APIGatewayEvent, context: Context): Promise<APIGatewayProxyResult> => {
   try {
     const req = event.queryStringParameters || JSON.parse(event.body || "{}");
@@ -118,6 +182,9 @@ export const historyHandler = async (event: APIGatewayEvent, context: Context): 
     switch (HttpMethod.toLowerCase()) {
       case "get":
         response = await handleGet({ session, req });
+        break;
+      case "post":
+        response = await handlePost({ session, req });
         break;
       default:
         response = {

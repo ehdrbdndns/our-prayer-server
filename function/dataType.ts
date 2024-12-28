@@ -67,3 +67,27 @@ export interface PlanLikeType {
 export interface Session {
   user_id: string;
 }
+
+export interface LectureType {
+  lecture_id: string;
+  plan_id: string;
+  title: string;
+  description: string;
+  time: number;
+  bgm: string;
+  is_active: boolean;
+  created_date: number;
+  updated_date: number;
+}
+
+export interface LectureAudioType {
+  lecture_audio_id: string;
+  lecture_id: string;
+  file_name: string;
+  audio: string;
+  caption: string;
+  created_date: number;
+  updated_date: number;
+  start_time: number;
+  is_active: boolean;
+}
