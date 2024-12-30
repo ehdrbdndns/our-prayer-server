@@ -85,13 +85,13 @@ async function handleGet({
 async function handlePut({
   session, req
 }: {
-  session: Session, req: { name: string }
+  session: Session, req: { name?: string, alarm?: boolean }
 }): Promise<APIGatewayProxyResult> {
   try {
-    const { name } = req;
+    const { name, alarm } = req;
     const { user_id } = session;
 
-    if (!name) {
+    if (name === undefined && alarm === undefined) {
       return {
         statusCode: 400,
         headers: {
@@ -101,20 +101,40 @@ async function handlePut({
       }
     }
 
-    const [rows] = await promisePool.query(`
-    UPDATE user
-    SET name = ?, updated_date = NOW()
-    WHERE user_id = ?
-    `, [name, user_id]) as [{ affectedRows: number }, unknown];
+    if (name !== undefined) {
+      const [rows] = await promisePool.query(`
+      UPDATE user
+      SET name = ?, updated_date = NOW()
+      WHERE user_id = ?
+      `, [name, user_id]) as [{ affectedRows: number }, unknown];
 
-    if (rows.affectedRows === 0) {
-      return {
-        statusCode: 500,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-        },
-        body: JSON.stringify({ message: "internal server error" }),
-      };
+      if (rows.affectedRows === 0) {
+        return {
+          statusCode: 500,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+          },
+          body: JSON.stringify({ message: "internal server error" }),
+        };
+      }
+    }
+
+    if (alarm !== undefined) {
+      const [rows] = await promisePool.query(`
+        UPDATE user_state
+        SET alarm = ?, updated_date = NOW()
+        WHERE user_id = ?
+      `, [alarm, user_id]) as [{ affectedRows: number }, unknown];
+
+      if (rows.affectedRows === 0) {
+        return {
+          statusCode: 500,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+          },
+          body: JSON.stringify({ message: "internal server error" }),
+        };
+      }
     }
 
     return {
