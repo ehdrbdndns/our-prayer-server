@@ -144,6 +144,18 @@ Resources:
             Path: /history
             Method: POST
             RestApiId: !Ref ourprayer
+        ourprayerPUThistory:
+          Type: Api
+          Properties:
+            Path: /history
+            Method: PUT
+            RestApiId: !Ref ourprayer
+        ourprayerDELETEhistory:
+          Type: Api
+          Properties:
+            Path: /history
+            Method: DELETE
+            RestApiId: !Ref ourprayer
     # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-using-build-typescript.html
     Metadata:
       BuildMethod: esbuild
@@ -279,6 +291,18 @@ Resources:
                 uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${history.Arn}/invocations
               responses: {}
             post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${history.Arn}/invocations
+              responses: {}
+            put:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${history.Arn}/invocations
+              responses: {}
+            delete:
               x-amazon-apigateway-integration:
                 httpMethod: POST
                 type: aws_proxy
