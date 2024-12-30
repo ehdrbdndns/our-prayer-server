@@ -1,8 +1,24 @@
 import { APIGatewayEvent, APIGatewayProxyResult, Context } from "aws-lambda";
 import { Payload, verifyToken } from 'customJwt';
 import { register } from "./register";
+import { Session } from "../../dataType";
 
 // HTTP 메서드 처리 함수 정의
+async function handleGet({
+  session
+}: {
+  session: Session
+}): Promise<APIGatewayProxyResult> {
+  // get user info
+  return {
+    statusCode: 501,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+    },
+    body: JSON.stringify({ message: "Not Implemented" }),
+  };
+}
+
 async function handlePost(req: any): Promise<APIGatewayProxyResult> {
   const ret = await register(req);
   return {
@@ -11,28 +27,6 @@ async function handlePost(req: any): Promise<APIGatewayProxyResult> {
       "Access-Control-Allow-Origin": "*",
     },
     body: JSON.stringify(ret.data),
-  };
-}
-
-async function handlePut(req: any): Promise<APIGatewayProxyResult> {
-  // re-generate token by refresh token
-  return {
-    statusCode: 501,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-    },
-    body: JSON.stringify({ message: "Not Implemented" }),
-  };
-}
-
-async function handleDelete(req: any): Promise<APIGatewayProxyResult> {
-  // delete user
-  return {
-    statusCode: 501,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-    },
-    body: JSON.stringify({ message: "Not Implemented" }),
   };
 }
 
@@ -51,14 +45,11 @@ export const authHandler = async (event: APIGatewayEvent, context: Context): Pro
     let response: any = {};
 
     switch (HttpMethod.toLowerCase()) {
+      case "get":
+        response = await handleGet(req);
+        break;
       case "post":
         response = await handlePost(req);
-        break;
-      case "put":
-        response = await handlePut(req);
-        break;
-      case "delete":
-        response = await handleDelete(req);
         break;
       default:
         response = {

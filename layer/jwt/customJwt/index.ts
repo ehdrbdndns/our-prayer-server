@@ -1,7 +1,7 @@
 import * as jwt from 'jsonwebtoken';
 import { JWT_SECRET_KEY } from './keys';
 
-const TOKEN_EXPIRES_IN = '90d';
+const TOKEN_EXPIRES_IN = '1h';
 
 export interface Payload {
   user_id?: string;
