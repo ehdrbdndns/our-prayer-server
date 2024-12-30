@@ -32,18 +32,21 @@ const generateTokenByRefreshToken = async (refreshToken: string) => {
 async function handleGet({
   session, req
 }: {
-  session: Session, req: { historyRange?: number }
+  session: Session, req: { prayer_history_id?: string, historyRange?: number }
 }): Promise<APIGatewayProxyResult> {
 
-  const { historyRange } = req;
+  const { prayer_history_id, historyRange } = req;
 
   try {
     const query = `
     SELECT 
-        prayer_history_id,
-        duration,
-        note,
-        UNIX_TIMESTAMP(created_date) AS created_date
+        prayer_history_id
+        , duration
+        , UNIX_TIMESTAMP(created_date) AS created_date
+      ${prayer_history_id !== undefined
+        ? ', note'
+        : ''
+      }
     FROM 
         prayer_history
     WHERE 
@@ -52,20 +55,38 @@ async function handleGet({
         ? 'AND created_date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)'
         : ''
       }
+      ${prayer_history_id !== undefined
+        ? 'AND prayer_history_id = ?'
+        : ''
+      }
     ORDER BY 
         created_date
     `;
 
-    const queryParams = historyRange !== undefined ? [session.user_id, historyRange] : [session.user_id];
+    console.log(prayer_history_id);
+
+    const queryParams: (string | number)[] = [session.user_id];
+    if (historyRange !== undefined) {
+      queryParams.push(historyRange);
+    }
+    if (prayer_history_id !== undefined) {
+      queryParams.push(prayer_history_id);
+    }
 
     const [rows] = await promisePool.query(query, queryParams) as [PrayerHistoryType[], unknown];
+
+    console.log(rows);
 
     return {
       statusCode: 200,
       headers: {
         "Access-Control-Allow-Origin": "*",
       },
-      body: JSON.stringify(rows),
+      body: JSON.stringify(
+        prayer_history_id !== undefined
+          ? rows[0]
+          : rows
+      ),
     }
   } catch (e) {
     console.error(e);
