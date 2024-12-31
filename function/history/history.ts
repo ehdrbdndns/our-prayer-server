@@ -32,22 +32,30 @@ const generateTokenByRefreshToken = async (refreshToken: string) => {
 async function handleGet({
   session, req
 }: {
-  session: Session, req: { historyRange?: number }
+  session: Session, req: { prayer_history_id?: string, historyRange?: number }
 }): Promise<APIGatewayProxyResult> {
 
-  const { historyRange } = req;
+  const { prayer_history_id, historyRange } = req;
 
   try {
     const query = `
     SELECT 
-        prayer_history_id,
-        duration,
-        note,
-        UNIX_TIMESTAMP(created_date) AS created_date
+        prayer_history_id
+        , duration
+        , UNIX_TIMESTAMP(updated_date) AS updated_date
+        , UNIX_TIMESTAMP(created_date) AS created_date
+      ${prayer_history_id !== undefined
+        ? ', note'
+        : ''
+      }
     FROM 
         prayer_history
-    WHERE 
+    WHERE
         user_id = ?
+      ${prayer_history_id !== undefined
+        ? 'AND prayer_history_id = ?'
+        : ''
+      }
       ${historyRange !== undefined
         ? 'AND created_date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)'
         : ''
@@ -56,7 +64,13 @@ async function handleGet({
         created_date
     `;
 
-    const queryParams = historyRange !== undefined ? [session.user_id, historyRange] : [session.user_id];
+    const queryParams: (string | number)[] = [session.user_id];
+    if (prayer_history_id !== undefined) {
+      queryParams.push(prayer_history_id);
+    }
+    if (historyRange !== undefined) {
+      queryParams.push(historyRange);
+    }
 
     const [rows] = await promisePool.query(query, queryParams) as [PrayerHistoryType[], unknown];
 
@@ -65,7 +79,11 @@ async function handleGet({
       headers: {
         "Access-Control-Allow-Origin": "*",
       },
-      body: JSON.stringify(rows),
+      body: JSON.stringify(
+        prayer_history_id !== undefined
+          ? rows[0]
+          : rows
+      ),
     }
   } catch (e) {
     console.error(e);
@@ -142,6 +160,122 @@ async function handlePost({
   }
 }
 
+async function handlePut({
+  session, req
+}: {
+  session: Session, req: { prayer_history_id: string, note: string }
+}): Promise<APIGatewayProxyResult> {
+  try {
+    const { user_id } = session;
+    const { prayer_history_id, note } = req;
+
+    if (!prayer_history_id || !note) {
+      return {
+        statusCode: 400,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({ message: "bad request" }),
+      }
+    }
+
+    const [rows] = await promisePool.query(`
+    UPDATE prayer_history
+    SET 
+      note = ?, 
+      updated_date = NOW()
+    WHERE prayer_history_id = ?
+      AND user_id = ?
+    `, [note, prayer_history_id, user_id]
+    ) as [{ affectedRows: number }, unknown];
+
+    if (rows.affectedRows === 0) {
+      return {
+        statusCode: 500,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({ message: "internal server error" }),
+      };
+    }
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({ message: "success" }),
+    };
+  } catch (e) {
+    console.error(e);
+    return {
+      statusCode: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({ message: "internal server error" }),
+    };
+  }
+}
+
+async function handleDelete({
+  session, req
+}: {
+  session: Session, req: { prayer_history_id: string }
+}): Promise<APIGatewayProxyResult> {
+  try {
+    const { user_id } = session;
+    const { prayer_history_id } = req;
+
+    if (!prayer_history_id) {
+      return {
+        statusCode: 400,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({ message: "bad request" }),
+      }
+    }
+
+    const [rows] = await promisePool.query(`
+    UPDATE prayer_history
+    SET 
+      note = NULL,
+      updated_date = NOW()
+    WHERE prayer_history_id = ?
+      AND user_id = ?
+    `, [prayer_history_id, user_id]
+    ) as [{ affectedRows: number }, unknown];
+
+    if (rows.affectedRows === 0) {
+      return {
+        statusCode: 500,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({ message: "internal server error" }),
+      };
+    }
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({ message: "success" }),
+    };
+  } catch (e) {
+    console.error(e);
+    return {
+      statusCode: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({ message: "internal server error" }),
+    };
+  }
+}
+
 export const historyHandler = async (event: APIGatewayEvent, context: Context): Promise<APIGatewayProxyResult> => {
   try {
     const req = event.queryStringParameters || JSON.parse(event.body || "{}");
@@ -185,6 +319,12 @@ export const historyHandler = async (event: APIGatewayEvent, context: Context): 
         break;
       case "post":
         response = await handlePost({ session, req });
+        break;
+      case "put":
+        response = await handlePut({ session, req });
+        break;
+      case "delete":
+        response = await handleDelete({ session, req });
         break;
       default:
         response = {
