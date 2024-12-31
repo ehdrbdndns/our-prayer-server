@@ -2,6 +2,8 @@ import { APIGatewayEvent, APIGatewayProxyResult, Context } from "aws-lambda";
 import { generateToken, Payload, verifyToken } from 'customJwt';
 import { promisePool } from 'customMysql';
 import { Session } from "../dataType";
+import { v4 as uuidv4 } from 'uuid';
+import { ResultSetHeader } from "mysql2";
 
 const generateTokenByRefreshToken = async (refreshToken: string) => {
   try {
@@ -75,6 +77,67 @@ async function handleGet({
   }
 }
 
+async function handlePost({
+  session,
+  req
+}: {
+  session: Session
+  req: { content: string }
+}) {
+
+  const { user_id } = session;
+  const { content } = req;
+
+  if (!content) {
+    return {
+      statusCode: 400,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({ message: "content is required" }),
+    };
+  }
+
+  try {
+    const question_id = uuidv4();
+
+    const [rows] = await promisePool.query(`
+    INSERT INTO question
+      (question_id, user_id, content, is_answered, is_active)
+    VALUES
+      (?, ?, ?, 0, 1)
+    `, [question_id, user_id, content]) as [ResultSetHeader, unknown];;
+
+    if (rows.affectedRows === 0) {
+      return {
+        statusCode: 500,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({ message: "internal server error" }),
+      };
+    }
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({ message: "success" }),
+    };
+
+  } catch (e) {
+    console.error(e);
+    return {
+      statusCode: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({ message: "internal server error" }),
+    };
+  }
+}
+
 export const questionHandler = async (event: APIGatewayEvent, context: Context): Promise<APIGatewayProxyResult> => {
   try {
     const req = event.queryStringParameters || JSON.parse(event.body || "{}");
@@ -115,6 +178,9 @@ export const questionHandler = async (event: APIGatewayEvent, context: Context):
     switch (HttpMethod.toLowerCase()) {
       case "get":
         response = await handleGet({ session });
+        break;
+      case "post":
+        response = await handlePost({ session, req });
         break;
       default:
         response = {
