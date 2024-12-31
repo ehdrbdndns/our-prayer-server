@@ -42,6 +42,7 @@ async function handleGet({
     SELECT 
         prayer_history_id
         , duration
+        , UNIX_TIMESTAMP(updated_date) AS updated_date
         , UNIX_TIMESTAMP(created_date) AS created_date
       ${prayer_history_id !== undefined
         ? ', note'
@@ -49,33 +50,29 @@ async function handleGet({
       }
     FROM 
         prayer_history
-    WHERE 
+    WHERE
         user_id = ?
-      ${historyRange !== undefined
-        ? 'AND created_date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)'
-        : ''
-      }
       ${prayer_history_id !== undefined
         ? 'AND prayer_history_id = ?'
+        : ''
+      }
+      ${historyRange !== undefined
+        ? 'AND created_date >= DATE_SUB(CURDATE(), INTERVAL ? DAY)'
         : ''
       }
     ORDER BY 
         created_date
     `;
 
-    console.log(prayer_history_id);
-
     const queryParams: (string | number)[] = [session.user_id];
-    if (historyRange !== undefined) {
-      queryParams.push(historyRange);
-    }
     if (prayer_history_id !== undefined) {
       queryParams.push(prayer_history_id);
     }
+    if (historyRange !== undefined) {
+      queryParams.push(historyRange);
+    }
 
     const [rows] = await promisePool.query(query, queryParams) as [PrayerHistoryType[], unknown];
-
-    console.log(rows);
 
     return {
       statusCode: 200,
@@ -243,7 +240,7 @@ async function handleDelete({
     const [rows] = await promisePool.query(`
     UPDATE prayer_history
     SET 
-      note = NULL, 
+      note = NULL,
       updated_date = NOW()
     WHERE prayer_history_id = ?
       AND user_id = ?
