@@ -138,6 +138,66 @@ async function handlePost({
   }
 }
 
+async function handlePut({
+  session,
+  req
+}: {
+  session: Session
+  req: { question_id: string, content: string }
+}) {
+
+  const { user_id } = session;
+  const { question_id, content } = req;
+
+  if (!question_id || !content) {
+    return {
+      statusCode: 400,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({ message: "content is required" }),
+    };
+  }
+
+  try {
+
+    const [rows] = await promisePool.query(`
+    UPDATE question
+    SET content = ?, updated_date = NOW()
+    WHERE question_id = ?
+      AND user_id = ?
+    `, [content, question_id, user_id]) as [ResultSetHeader, unknown];;
+
+    if (rows.affectedRows === 0) {
+      return {
+        statusCode: 500,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({ message: "internal server error" }),
+      };
+    }
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({ message: "success" }),
+    };
+
+  } catch (e) {
+    console.error(e);
+    return {
+      statusCode: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({ message: "internal server error" }),
+    };
+  }
+}
+
 export const questionHandler = async (event: APIGatewayEvent, context: Context): Promise<APIGatewayProxyResult> => {
   try {
     const req = event.queryStringParameters || JSON.parse(event.body || "{}");
@@ -181,6 +241,9 @@ export const questionHandler = async (event: APIGatewayEvent, context: Context):
         break;
       case "post":
         response = await handlePost({ session, req });
+        break;
+      case "put":
+        response = await handlePut({ session, req });
         break;
       default:
         response = {

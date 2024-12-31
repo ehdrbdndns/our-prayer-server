@@ -246,6 +246,12 @@ Resources:
             Path: /question
             Method: POST
             RestApiId: !Ref ourprayer
+        ourprayerPUTquestion:
+          Type: Api
+          Properties:
+            Path: /question
+            Method: PUT
+            RestApiId: !Ref ourprayer
     # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-using-build-typescript.html
     Metadata:
       BuildMethod: esbuild
@@ -435,6 +441,12 @@ Resources:
                 uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${question.Arn}/invocations
               responses: {}
             post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${question.Arn}/invocations
+              responses: {}
+            put:
               x-amazon-apigateway-integration:
                 httpMethod: POST
                 type: aws_proxy
