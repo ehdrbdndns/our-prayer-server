@@ -31,12 +31,13 @@ const generateTokenByRefreshToken = async (refreshToken: string) => {
 }
 
 async function handleGet({
-  session
+  session, req
 }: {
-  session: Session
+  session: Session, req: { question_id?: string }
 }) {
 
   const { user_id } = session;
+  const { question_id } = req;
 
   try {
 
@@ -52,10 +53,13 @@ async function handleGet({
         ON question.question_id = question_reply.question_id
           AND question_reply.is_active = 1
 
-    WHERE question.user_id = ?
+    WHERE 
+    ${question_id ? 'question.question_id = ? AND' : ""}
+      question.user_id = ?
       AND question.is_active = 1
     GROUP BY question.question_id
-    `, [user_id]);
+    ORDER BY question.created_date DESC
+    `, question_id ? [question_id, user_id] : [user_id]);
 
     return {
       statusCode: 200,
@@ -292,7 +296,7 @@ export const questionHandler = async (event: APIGatewayEvent, context: Context):
 
     switch (HttpMethod.toLowerCase()) {
       case "get":
-        response = await handleGet({ session });
+        response = await handleGet({ session, req });
         break;
       case "post":
         response = await handlePost({ session, req });
