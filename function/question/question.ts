@@ -66,7 +66,7 @@ async function handleGet({
       headers: {
         "Access-Control-Allow-Origin": "*",
       },
-      body: JSON.stringify(rows),
+      body: JSON.stringify(question_id ? rows[0] : rows),
     };
 
   } catch (e) {
