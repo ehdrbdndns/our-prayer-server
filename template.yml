@@ -216,6 +216,72 @@ Resources:
           - customMysql
           - customJwt
           - esbuild
+  question:
+    Type: AWS::Serverless::Function
+    # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
+    Properties:
+      CodeUri: ./function/question
+      Handler: handler.handler
+      Runtime: nodejs22.x
+      Environment:
+        Variables:
+          NODE_OPTIONS: '--enable-source-maps'
+      MemorySize: 3008
+      Timeout: 30
+      Architectures:
+        - arm64
+      Layers:
+        - !Ref mysql2
+        - !Ref jwt
+      Events:
+        ourprayerGETquestion:
+          Type: Api
+          Properties:
+            Path: /question
+            Method: GET
+            RestApiId: !Ref ourprayer
+        ourprayerPOSTquestion:
+          Type: Api
+          Properties:
+            Path: /question
+            Method: POST
+            RestApiId: !Ref ourprayer
+        ourprayerPUTquestion:
+          Type: Api
+          Properties:
+            Path: /question
+            Method: PUT
+            RestApiId: !Ref ourprayer
+        ourprayerDELETEquestion:
+          Type: Api
+          Properties:
+            Path: /question
+            Method: DELETE
+            RestApiId: !Ref ourprayer
+        ourprayerGETquestionreply:
+          Type: Api
+          Properties:
+            Path: /question/reply
+            Method: GET
+            RestApiId: !Ref ourprayer
+        ourprayerPOSTquestionreply:
+          Type: Api
+          Properties:
+            Path: /question/reply
+            Method: POST
+            RestApiId: !Ref ourprayer
+    # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-using-build-typescript.html
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - handler.ts
+        External:
+          - '@aws-sdk/*'
+          - aws-sdk
+          - customMysql
+          - customJwt
+          - esbuild
   plan:
     Type: AWS::Serverless::Function
     # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-function.html
@@ -385,6 +451,44 @@ Resources:
                 type: aws_proxy
                 uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${history.Arn}/invocations
               responses: {}
+          /question:
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${question.Arn}/invocations
+              responses: {}
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${question.Arn}/invocations
+              responses: {}
+            put:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${question.Arn}/invocations
+              responses: {}
+            delete:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${question.Arn}/invocations
+              responses: {}
+          /question/reply:
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${question.Arn}/invocations
+              responses: {}
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${question.Arn}/invocations
+              responses: {}
       EndpointConfiguration: REGIONAL
       TracingEnabled: true
       Cors:
@@ -407,3 +511,4 @@ Metadata:
         - history
         - plan
         - lecture
+        - question

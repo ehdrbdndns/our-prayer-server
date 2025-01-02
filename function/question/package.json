@@ -1,0 +1,15 @@
+{
+  "name": "question",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/aws-lambda": "~8"
+  },
+  "dependencies": {
+    "customJwt": "../../layer/jwt/customJwt",
+    "customMysql": "../../layer/mysql2/customMysql",
+    "esbuild": "^0.24.0",
+    "uuid": "^11.0.3",
+    "mysql2": "../../layer/mysql2/node_modules/mysql2"
+  }
+}
