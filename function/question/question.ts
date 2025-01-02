@@ -53,7 +53,7 @@ async function handleGet({
         ON question.question_id = question_reply.question_id
           AND question_reply.is_active = 1
 
-    WHERE 
+    WHERE
     ${question_id ? 'question.question_id = ? AND' : ""}
       question.user_id = ?
       AND question.is_active = 1

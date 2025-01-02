@@ -108,17 +108,19 @@ async function handlePost({
     }
   }
 
+  const conn = await promisePool.getConnection();
   try {
+    conn.beginTransaction();
     const question_reply_id = uuidv4();
 
-    const [rows] = await promisePool.query(`
+    const [insertedReply] = await conn.query(`
     INSERT INTO question_reply
       (question_reply_id, question_id, user_id, content, is_active, is_replier)
     VALUES
       (?, ?, ?, ?, 1, 0)
-    `, [question_reply_id, question_id, user_id, content]) as [ResultSetHeader, unknown];;
+    `, [question_reply_id, question_id, user_id, content]) as [ResultSetHeader, unknown];
 
-    if (rows.affectedRows === 0) {
+    if (insertedReply.affectedRows === 0) {
       return {
         statusCode: 500,
         headers: {
@@ -128,6 +130,24 @@ async function handlePost({
       };
     }
 
+    const [updatedQuestion] = await conn.query(`
+    UPDATE question
+    SET is_answered = 0, updated_date = NOW()
+    WHERE question_id = ?
+    `, [question_id]) as [ResultSetHeader, unknown];;
+
+    if (updatedQuestion.affectedRows === 0) {
+      return {
+        statusCode: 500,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({ message: "internal server error" }),
+      }
+    }
+
+    await conn.commit();
+
     return {
       statusCode: 200,
       headers: {
@@ -135,7 +155,6 @@ async function handlePost({
       },
       body: JSON.stringify({ question_reply_id }),
     };
-
   } catch (e) {
     console.error(e);
     return {
@@ -145,6 +164,8 @@ async function handlePost({
       },
       body: JSON.stringify({ message: "internal server error" }),
     };
+  } finally {
+    conn.release();
   }
 }
 
