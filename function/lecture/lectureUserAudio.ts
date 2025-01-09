@@ -117,12 +117,13 @@ async function handleGet({
 async function handlePost({
   session, req
 }: {
-  session: Session, req: { lecture_audio_id: string, audio: string }[]
+  session: Session, req: { audios: { lecture_audio_id: string, audio: string }[] }
 }): Promise<APIGatewayProxyResult> {
 
   const { user_id } = session;
+  const { audios } = req;
 
-  if (!req || req.length === 0) {
+  if (!audios || audios.length === 0) {
     return {
       statusCode: 400,
       headers: {
@@ -140,7 +141,7 @@ async function handlePost({
       ?
     ON DUPLICATE KEY UPDATE
       audio = VALUES(audio)
-    `, [req.map(({ lecture_audio_id, audio }) => {
+    `, [audios.map(({ lecture_audio_id, audio }) => {
       return [uuidv4(), user_id, lecture_audio_id, audio];
     })]) as [{ affectedRows: number }, unknown];
 
