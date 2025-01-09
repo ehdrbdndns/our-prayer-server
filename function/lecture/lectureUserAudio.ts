@@ -87,13 +87,12 @@ async function handleGet({
 async function handlePost({
   session, req
 }: {
-  session: Session, req: { lecture_audio_id: string, audio: string }
+  session: Session, req: { lecture_audio_id: string, audio: string }[]
 }): Promise<APIGatewayProxyResult> {
 
   const { user_id } = session;
-  const { lecture_audio_id, audio } = req;
 
-  if (!lecture_audio_id || !audio) {
+  if (!req || req.length === 0) {
     return {
       statusCode: 400,
       headers: {
@@ -104,17 +103,16 @@ async function handlePost({
   }
 
   try {
-    const lecture_user_audio_id = uuidv4();
-
     const [rows] = await promisePool.query(`
     INSERT INTO lecture_user_audio
       (lecture_user_audio_id, user_id, lecture_audio_id, audio)
     VALUES
-      (?, ?, ?, ?)
+      ?
     ON DUPLICATE KEY UPDATE
       audio = VALUES(audio)
-    `, [lecture_user_audio_id, user_id, lecture_audio_id, audio]
-    ) as [{ affectedRows: number }, unknown];
+    `, [req.map(({ lecture_audio_id, audio }) => {
+      return [uuidv4(), user_id, lecture_audio_id, audio];
+    })]) as [{ affectedRows: number }, unknown];
 
     if (rows.affectedRows === 0) {
       return {
