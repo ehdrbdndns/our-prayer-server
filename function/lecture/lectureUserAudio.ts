@@ -49,7 +49,7 @@ async function handleGet({
   }
 
   try {
-    const [rows]: any = await promisePool.query(`
+    const [audios]: any = await promisePool.query(`
     SELECT 
       lecture_user_audio.audio AS audio,
       lecture_audio.caption AS caption,
@@ -65,12 +65,42 @@ async function handleGet({
     WHERE lecture_user_audio.user_id = ?
     `, [lecture_id, user_id]);
 
+    if (audios.length === 0) {
+      return {
+        statusCode: 404,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({ message: "not found" }),
+      }
+    }
+
+    const [bgm]: any = await promisePool.query(`
+    SELECT 
+      lecture_user_audio.audio AS audio
+    FROM lecture_user_audio
+    WHERE lecture_user_audio.lecture_audio_id = ?
+    `, [lecture_id]);
+
+    if (bgm.length === 0) {
+      return {
+        statusCode: 404,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({ message: "not found" }),
+      }
+    }
+
     return {
       statusCode: 200,
       headers: {
         "Access-Control-Allow-Origin": "*",
       },
-      body: JSON.stringify(rows),
+      body: JSON.stringify({
+        bgm: bgm[0].audio,
+        audios
+      }),
     }
   } catch (e) {
     console.error(e);
