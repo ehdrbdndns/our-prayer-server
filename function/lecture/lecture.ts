@@ -35,6 +35,7 @@ async function handleGet({
 }): Promise<APIGatewayProxyResult> {
   try {
 
+    const { user_id } = session;
     const { lecture_id } = req;
 
     if (!lecture_id) {
@@ -49,13 +50,18 @@ async function handleGet({
 
     const [lecture] = await promisePool.query(`
     SELECT
-      lecture_id, plan_id
-      , time, bgm, title
+      lecture_id, plan_id, time, title
+      , lecture_user_audio.audio AS bgm
     FROM lecture
+
+      INNER JOIN lecture_user_audio
+        ON lecture.lecture_id = lecture_user_audio.lecture_audio_id
+          AND user_id = ?
+
     WHERE lecture_id = ?
       AND is_active = 1
     LIMIT 1
-    `, [lecture_id]) as [LectureType[], unknown];
+    `, [user_id, lecture_id]) as [LectureType[], unknown];
 
     if (lecture.length === 0) {
       return {
@@ -69,12 +75,18 @@ async function handleGet({
 
     const [lectureAudios] = await promisePool.query(`
     SELECT
-      lecture_audio_id, file_name
-      , audio, caption, start_time
+      caption, start_time
+      , lecture_user_audio.audio AS audio
+      , lecture_audio.lecture_audio_id
     FROM lecture_audio
+
+      INNER JOIN lecture_user_audio
+        ON lecture_audio.lecture_audio_id = lecture_user_audio.lecture_audio_id
+          AND user_id = ?
+
     WHERE lecture_id = ?
       AND is_active = 1
-    `, [lecture_id]) as [LectureAudioType[], unknown];
+    `, [user_id, lecture_id]) as [LectureAudioType[], unknown];
 
     const res = {
       lecture: lecture[0],
