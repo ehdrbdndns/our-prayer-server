@@ -1,7 +1,7 @@
 import { APIGatewayEvent, APIGatewayProxyResult, Context } from "aws-lambda";
 import { generateToken, Payload, verifyToken } from 'customJwt';
 import { promisePool } from 'customMysql';
-import { LectureAudioType, LectureType, Session } from "../dataType";
+import { LectureAudioType, Session } from "../dataType";
 
 const generateTokenByRefreshToken = async (refreshToken: string) => {
   try {
@@ -31,66 +31,78 @@ const generateTokenByRefreshToken = async (refreshToken: string) => {
 async function handleGet({
   session, req
 }: {
-  session: Session, req: { lecture_id: number }
+  session: Session, req: { plan_id: number }
 }): Promise<APIGatewayProxyResult> {
-  try {
 
-    const { user_id } = session;
-    const { lecture_id } = req;
+  const { plan_id } = req;
 
-    if (!lecture_id) {
-      return {
-        statusCode: 400,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-        },
-        body: JSON.stringify({ message: "bad request" }),
-      }
+  if (!plan_id) {
+    return {
+      statusCode: 400,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({ message: "bad request" }),
     }
+  }
 
-    const [lecture] = await promisePool.query(`
-    SELECT
-      lecture_id, plan_id, time, title
-      , lecture_user_audio.audio AS bgm
-    FROM lecture
+  try {
+    const [rows] = await promisePool.query(`
+      SELECT 
+        l.lecture_id, 
+        l.bgm,
+        la.lecture_audio_id, 
+        la.audio,
+        la.caption,
+        la.start_time
+      FROM lecture l
 
-      INNER JOIN lecture_user_audio
-        ON lecture.lecture_id = lecture_user_audio.lecture_audio_id
-          AND user_id = ?
+        LEFT JOIN lecture_audio la 
+          ON l.lecture_id = la.lecture_id
+            AND la.is_active = 1
 
-    WHERE lecture_id = ?
-      AND is_active = 1
-    LIMIT 1
-    `, [user_id, lecture_id]) as [LectureType[], unknown];
+      WHERE l.plan_id = ?
+        AND l.is_active = 1
+    `, [plan_id]) as [(LectureAudioType & { bgm: string })[], unknown];
 
-    if (lecture.length === 0) {
+    if (rows.length === 0) {
       return {
         statusCode: 404,
         headers: {
           "Access-Control-Allow-Origin": "*",
         },
         body: JSON.stringify({ message: "not found" }),
-      }
+      };
     }
 
-    const [lectureAudios] = await promisePool.query(`
-    SELECT
-      caption, start_time
-      , lecture_user_audio.audio AS audio
-      , lecture_audio.lecture_audio_id
-    FROM lecture_audio
+    const lectureAudioList: {
+      [lecture_id: string]: {
+        audios: {
+          lecture_audio_id: string,
+          uri: string,
+          caption: string,
+          start_time: number
+        }[],
+        bgm: string
+      }
+    } = {};
 
-      INNER JOIN lecture_user_audio
-        ON lecture_audio.lecture_audio_id = lecture_user_audio.lecture_audio_id
-          AND user_id = ?
+    for (const row of rows) {
+      if (!lectureAudioList[row.lecture_id]) {
+        lectureAudioList[row.lecture_id] = {
+          audios: [],
+          bgm: row.bgm
+        };
+      }
 
-    WHERE lecture_id = ?
-      AND is_active = 1
-    `, [user_id, lecture_id]) as [LectureAudioType[], unknown];
-
-    const res = {
-      lecture: lecture[0],
-      lectureAudios
+      if (row.lecture_audio_id) {
+        lectureAudioList[row.lecture_id].audios.push({
+          lecture_audio_id: row.lecture_audio_id,
+          uri: row.audio,
+          caption: row.caption,
+          start_time: row.start_time
+        });
+      }
     }
 
     return {
@@ -98,7 +110,7 @@ async function handleGet({
       headers: {
         "Access-Control-Allow-Origin": "*",
       },
-      body: JSON.stringify(res),
+      body: JSON.stringify(lectureAudioList),
     }
   } catch (e) {
     console.error(e);
@@ -112,7 +124,7 @@ async function handleGet({
   }
 }
 
-export const lectureHandler = async (event: APIGatewayEvent, context: Context): Promise<APIGatewayProxyResult> => {
+export const lectureAudioHandler = async (event: APIGatewayEvent, context: Context): Promise<APIGatewayProxyResult> => {
   try {
     const req = event.queryStringParameters || JSON.parse(event.body || "{}");
     const HttpMethod = event.requestContext.httpMethod;
@@ -175,6 +187,5 @@ export const lectureHandler = async (event: APIGatewayEvent, context: Context): 
       },
       body: JSON.stringify({ message: "internal server error" }),
     };
-
   }
 }

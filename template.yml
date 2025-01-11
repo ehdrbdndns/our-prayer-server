@@ -204,6 +204,30 @@ Resources:
             Path: /lecture
             Method: GET
             RestApiId: !Ref ourprayer
+        ourprayerGETlectureaudio:
+          Type: Api
+          Properties:
+            Path: /lecture/audio
+            Method: GET
+            RestApiId: !Ref ourprayer
+        ourprayerPOSTlectureuseraudio:
+          Type: Api
+          Properties:
+            Path: /lecture/user/audio
+            Method: POST
+            RestApiId: !Ref ourprayer
+        ourprayerGETlectureuserAudio:
+          Type: Api
+          Properties:
+            Path: /lecture/userAudio
+            Method: GET
+            RestApiId: !Ref ourprayer
+        ourprayerPOSTlectureuserAudio:
+          Type: Api
+          Properties:
+            Path: /lecture/userAudio
+            Method: POST
+            RestApiId: !Ref ourprayer
     # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-using-build-typescript.html
     Metadata:
       BuildMethod: esbuild
@@ -488,6 +512,26 @@ Resources:
                 httpMethod: POST
                 type: aws_proxy
                 uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${question.Arn}/invocations
+              responses: {}
+          /lecture/audio:
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lecture.Arn}/invocations
+              responses: {}
+          /lecture/userAudio:
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lecture.Arn}/invocations
+              responses: {}
+            post:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lecture.Arn}/invocations
               responses: {}
       EndpointConfiguration: REGIONAL
       TracingEnabled: true

@@ -1,7 +1,8 @@
 import { APIGatewayEvent, APIGatewayProxyResult, Context } from "aws-lambda";
 import { generateToken, Payload, verifyToken } from 'customJwt';
 import { promisePool } from 'customMysql';
-import { LectureAudioType, LectureType, Session } from "../dataType";
+import { Session } from "../dataType";
+import { v4 as uuidv4 } from 'uuid';
 
 const generateTokenByRefreshToken = async (refreshToken: string) => {
   try {
@@ -33,37 +34,38 @@ async function handleGet({
 }: {
   session: Session, req: { lecture_id: number }
 }): Promise<APIGatewayProxyResult> {
-  try {
 
-    const { user_id } = session;
-    const { lecture_id } = req;
+  const { user_id } = session;
+  const { lecture_id } = req;
 
-    if (!lecture_id) {
-      return {
-        statusCode: 400,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-        },
-        body: JSON.stringify({ message: "bad request" }),
-      }
+  if (!lecture_id) {
+    return {
+      statusCode: 400,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({ message: "bad request" }),
     }
+  }
 
-    const [lecture] = await promisePool.query(`
-    SELECT
-      lecture_id, plan_id, time, title
-      , lecture_user_audio.audio AS bgm
-    FROM lecture
+  try {
+    const [audios]: any = await promisePool.query(`
+    SELECT 
+      lecture_user_audio.audio AS audio,
+      lecture_audio.caption AS caption,
+      lecture_audio.start_time AS start_time
 
-      INNER JOIN lecture_user_audio
-        ON lecture.lecture_id = lecture_user_audio.lecture_audio_id
-          AND user_id = ?
+    FROM lecture_user_audio
+    
+      INNER JOIN lecture_audio
+        ON lecture_user_audio.lecture_audio_id = lecture_audio.lecture_audio_id
+          AND lecture_audio.lecture_id = ?
+          AND lecture_audio.is_active = 1
+    
+    WHERE lecture_user_audio.user_id = ?
+    `, [lecture_id, user_id]);
 
-    WHERE lecture_id = ?
-      AND is_active = 1
-    LIMIT 1
-    `, [user_id, lecture_id]) as [LectureType[], unknown];
-
-    if (lecture.length === 0) {
+    if (audios.length === 0) {
       return {
         statusCode: 404,
         headers: {
@@ -73,24 +75,21 @@ async function handleGet({
       }
     }
 
-    const [lectureAudios] = await promisePool.query(`
-    SELECT
-      caption, start_time
-      , lecture_user_audio.audio AS audio
-      , lecture_audio.lecture_audio_id
-    FROM lecture_audio
+    const [bgm]: any = await promisePool.query(`
+    SELECT 
+      lecture_user_audio.audio AS audio
+    FROM lecture_user_audio
+    WHERE lecture_user_audio.lecture_audio_id = ?
+    `, [lecture_id]);
 
-      INNER JOIN lecture_user_audio
-        ON lecture_audio.lecture_audio_id = lecture_user_audio.lecture_audio_id
-          AND user_id = ?
-
-    WHERE lecture_id = ?
-      AND is_active = 1
-    `, [user_id, lecture_id]) as [LectureAudioType[], unknown];
-
-    const res = {
-      lecture: lecture[0],
-      lectureAudios
+    if (bgm.length === 0) {
+      return {
+        statusCode: 404,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({ message: "not found" }),
+      }
     }
 
     return {
@@ -98,7 +97,10 @@ async function handleGet({
       headers: {
         "Access-Control-Allow-Origin": "*",
       },
-      body: JSON.stringify(res),
+      body: JSON.stringify({
+        bgm: bgm[0].audio,
+        audios
+      }),
     }
   } catch (e) {
     console.error(e);
@@ -112,7 +114,67 @@ async function handleGet({
   }
 }
 
-export const lectureHandler = async (event: APIGatewayEvent, context: Context): Promise<APIGatewayProxyResult> => {
+async function handlePost({
+  session, req
+}: {
+  session: Session, req: { audios: { lecture_audio_id: string, audio: string }[] }
+}): Promise<APIGatewayProxyResult> {
+
+  const { user_id } = session;
+  const { audios } = req;
+
+  if (!audios || audios.length === 0) {
+    return {
+      statusCode: 400,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({ message: "bad request" }),
+    }
+  }
+
+  try {
+    const [rows] = await promisePool.query(`
+    INSERT INTO lecture_user_audio
+      (lecture_user_audio_id, user_id, lecture_audio_id, audio)
+    VALUES
+      ?
+    ON DUPLICATE KEY UPDATE
+      audio = VALUES(audio)
+    `, [audios.map(({ lecture_audio_id, audio }) => {
+      return [uuidv4(), user_id, lecture_audio_id, audio];
+    })]) as [{ affectedRows: number }, unknown];
+
+    if (rows.affectedRows === 0) {
+      return {
+        statusCode: 500,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({ message: "internal server error" }),
+      };
+    }
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({ message: "success" }),
+    }
+  } catch (e) {
+    console.error(e);
+    return {
+      statusCode: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({ message: "internal server error" }),
+    };
+  }
+}
+
+export const lectureUserAudioHandler = async (event: APIGatewayEvent, context: Context): Promise<APIGatewayProxyResult> => {
   try {
     const req = event.queryStringParameters || JSON.parse(event.body || "{}");
     const HttpMethod = event.requestContext.httpMethod;
@@ -153,6 +215,9 @@ export const lectureHandler = async (event: APIGatewayEvent, context: Context): 
       case "get":
         response = await handleGet({ session, req });
         break;
+      case "post":
+        response = await handlePost({ session, req });
+        break;
       default:
         response = {
           statusCode: 405,
@@ -175,6 +240,5 @@ export const lectureHandler = async (event: APIGatewayEvent, context: Context): 
       },
       body: JSON.stringify({ message: "internal server error" }),
     };
-
   }
 }

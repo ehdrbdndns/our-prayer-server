@@ -90,4 +90,5 @@ export interface LectureAudioType {
   updated_date: number;
   start_time: number;
   is_active: boolean;
+  audit_date: number;
 }
