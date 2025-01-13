@@ -85,13 +85,13 @@ async function handleGet({
 async function handlePut({
   session, req
 }: {
-  session: Session, req: { name?: string, alarm?: boolean }
+  session: Session, req: { name?: string, alarm?: boolean, expoPushToken?: string }
 }): Promise<APIGatewayProxyResult> {
   try {
-    const { name, alarm } = req;
+    const { name, alarm, expoPushToken } = req;
     const { user_id } = session;
 
-    if (name === undefined && alarm === undefined) {
+    if (name === undefined && alarm === undefined && expoPushToken === undefined) {
       return {
         statusCode: 400,
         headers: {
@@ -125,6 +125,24 @@ async function handlePut({
         SET alarm = ?, updated_date = NOW()
         WHERE user_id = ?
       `, [alarm, user_id]) as [{ affectedRows: number }, unknown];
+
+      if (rows.affectedRows === 0) {
+        return {
+          statusCode: 500,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+          },
+          body: JSON.stringify({ message: "internal server error" }),
+        };
+      }
+    }
+
+    if (expoPushToken !== undefined) {
+      const [rows] = await promisePool.query(`
+        UPDATE user_state
+        SET expo_push_token = ?, updated_date = NOW()
+        WHERE user_id = ?
+      `, [expoPushToken, user_id]) as [{ affectedRows: number }, unknown];
 
       if (rows.affectedRows === 0) {
         return {

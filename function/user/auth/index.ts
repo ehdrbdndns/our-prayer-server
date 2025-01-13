@@ -1,7 +1,6 @@
 import { APIGatewayEvent, APIGatewayProxyResult, Context } from "aws-lambda";
 import { Payload, verifyToken } from 'customJwt';
 import { register } from "./register";
-import { Session } from "../../dataType";
 
 async function handlePost(req: { userType: 'local' | 'sns', expoPushToken: string, alarm: boolean }): Promise<APIGatewayProxyResult> {
   const ret = await register(req);
