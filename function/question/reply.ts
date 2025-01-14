@@ -110,7 +110,7 @@ async function handlePost({
 
   const conn = await promisePool.getConnection();
   try {
-    conn.beginTransaction();
+    await conn.beginTransaction();
     const question_reply_id = uuidv4();
 
     const [insertedReply] = await conn.query(`
