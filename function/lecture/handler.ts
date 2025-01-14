@@ -25,5 +25,7 @@ export const handler = async (event: APIGatewayEvent, context: Context): Promise
     res = await router[path](event, context);
   }
 
+  console.log(res);
+
   return res;
 }

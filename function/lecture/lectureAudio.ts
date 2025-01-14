@@ -142,8 +142,7 @@ export const lectureAudioHandler = async (event: APIGatewayEvent, context: Conte
     }
 
     if (!decodedToken.user_id) {
-      const userId = await generateTokenByRefreshToken(refreshToken);
-      const newAccessToken = userId !== "" ? generateToken({ user_id: userId }) : "";
+      const newAccessToken = await generateTokenByRefreshToken(refreshToken);
 
       return {
         statusCode: 401,

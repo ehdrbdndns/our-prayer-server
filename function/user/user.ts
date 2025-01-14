@@ -261,8 +261,7 @@ export const userHandler = async (event: APIGatewayEvent, context: Context): Pro
     }
 
     if (!decodedToken.user_id) {
-      const userId = await generateTokenByRefreshToken(refreshToken);
-      const newAccessToken = userId !== "" ? generateToken({ user_id: userId }) : "";
+      const newAccessToken = await generateTokenByRefreshToken(refreshToken);
 
       return {
         statusCode: 401,
