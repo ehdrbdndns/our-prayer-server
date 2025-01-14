@@ -39,7 +39,7 @@ async function handleGet({
     // retrieve user and user_state
     const [rows]: any = await promisePool.query(`
       SELECT 
-        name, alarm
+        name, alarm, expo_push_token
         , UNIX_TIMESTAMP(user.created_date) as created_date
       FROM user
 
