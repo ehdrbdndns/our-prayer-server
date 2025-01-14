@@ -23,7 +23,11 @@ function generateRandomChristianName(): string {
   return `${adjective} ${firstName}`;
 }
 
-export const register = async (ret: { userType: 'local' | 'sns' }): Promise<{
+export const register = async (ret: {
+  alarm: boolean,
+  expoPushToken: string,
+  userType: 'local' | 'sns'
+}): Promise<{
   statusCode?: number,
   data: {
     message: string
@@ -36,7 +40,13 @@ export const register = async (ret: { userType: 'local' | 'sns' }): Promise<{
     name: string
   }
 }> => {
-  if (!ret.userType && ret.userType !== 'local' && ret.userType !== 'sns') {
+
+  const { alarm, expoPushToken, userType } = ret;
+
+  if (
+    !userType && userType !== 'local' && userType !== 'sns'
+    || alarm === undefined || !expoPushToken
+  ) {
     return {
       statusCode: 400,
       data: {
@@ -45,7 +55,7 @@ export const register = async (ret: { userType: 'local' | 'sns' }): Promise<{
     }
   }
 
-  if (ret.userType === 'local') {
+  if (userType === 'local') {
     const conn = await promisePool.getConnection();
 
     const user_id = uuidv4();
@@ -74,10 +84,10 @@ export const register = async (ret: { userType: 'local' | 'sns' }): Promise<{
       // insert user_state
       const [insertStateResult] = await conn.query(`
       INSERT INTO user_state
-        (user_state_id, user_id, role, status, alarm)
+        (user_state_id, user_id, role, status, alarm, expo_push_token)
       VALUES
-        (?, ?, ?, ?, ?)
-      `, [user_state_id, user_id, 'user', 'active', 0]
+        (?, ?, ?, ?, ?, ?)
+      `, [user_state_id, user_id, 'user', 'active', alarm, expoPushToken]
       ) as [ResultSetHeader, unknown];
 
       if (insertStateResult.affectedRows === 0) {

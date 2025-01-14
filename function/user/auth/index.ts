@@ -1,25 +1,8 @@
 import { APIGatewayEvent, APIGatewayProxyResult, Context } from "aws-lambda";
 import { Payload, verifyToken } from 'customJwt';
 import { register } from "./register";
-import { Session } from "../../dataType";
 
-// HTTP 메서드 처리 함수 정의
-async function handleGet({
-  session
-}: {
-  session: Session
-}): Promise<APIGatewayProxyResult> {
-  // get user info
-  return {
-    statusCode: 501,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-    },
-    body: JSON.stringify({ message: "Not Implemented" }),
-  };
-}
-
-async function handlePost(req: any): Promise<APIGatewayProxyResult> {
+async function handlePost(req: { userType: 'local' | 'sns', expoPushToken: string, alarm: boolean }): Promise<APIGatewayProxyResult> {
   const ret = await register(req);
   return {
     statusCode: ret.statusCode,
@@ -45,9 +28,6 @@ export const authHandler = async (event: APIGatewayEvent, context: Context): Pro
     let response: any = {};
 
     switch (HttpMethod.toLowerCase()) {
-      case "get":
-        response = await handleGet(req);
-        break;
       case "post":
         response = await handlePost(req);
         break;
