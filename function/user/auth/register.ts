@@ -45,7 +45,7 @@ export const register = async (ret: {
 
   if (
     !userType && userType !== 'local' && userType !== 'sns'
-    || alarm === undefined || !expoPushToken
+    || alarm === undefined
   ) {
     return {
       statusCode: 400,
@@ -87,7 +87,7 @@ export const register = async (ret: {
         (user_state_id, user_id, role, status, alarm, expo_push_token)
       VALUES
         (?, ?, ?, ?, ?, ?)
-      `, [user_state_id, user_id, 'user', 'active', alarm, expoPushToken]
+      `, [user_state_id, user_id, 'user', 'active', alarm, expoPushToken || '']
       ) as [ResultSetHeader, unknown];
 
       if (insertStateResult.affectedRows === 0) {
