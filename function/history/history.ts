@@ -106,7 +106,7 @@ async function handlePost({
     const { user_id } = session;
     const { lecture_id, duration, note } = req;
 
-    if (!lecture_id || !duration || !note) {
+    if (!lecture_id || !duration) {
       return {
         statusCode: 400,
         headers: {
