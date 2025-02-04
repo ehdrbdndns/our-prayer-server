@@ -87,11 +87,15 @@ async function handleGet({
           , author_name, author_description, author_profile, author_deeplink
           , IF(plan_like.plan_like_id IS NOT NULL, 1, 0) AS is_liked
           , IFNULL(plan_like.plan_like_id, 0) AS plan_like_id
+          , UNIX_TIMESTAMP(plan_lecture_audit.updated_date) AS audit_updated_date
       FROM plan
 
         LEFT JOIN plan_like 
           ON plan.plan_id = plan_like.plan_id
             AND plan_like.user_id = ?
+
+        INNER JOIN plan_lecture_audit
+          ON plan.plan_id = plan_lecture_audit.plan_id
 
       WHERE plan.plan_id = ?
       `, [user_id, plan_id]);
