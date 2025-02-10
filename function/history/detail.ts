@@ -145,6 +145,61 @@ async function handlePost({
   }
 }
 
+async function handleDelete({
+  session, req
+}: {
+  session: Session, req: { prayer_history_id: string }
+}): Promise<APIGatewayProxyResult> {
+  try {
+    const { user_id } = session;
+    const { prayer_history_id } = req;
+
+    if (!prayer_history_id) {
+      return {
+        statusCode: 400,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({ message: "bad request" }),
+      }
+    }
+
+    const [rows] = await promisePool.query(`
+    DELETE FROM prayer_history
+      WHERE prayer_history_id = ?
+        AND user_id = ?
+    `, [prayer_history_id, user_id]
+    ) as [{ affectedRows: number }, unknown];
+
+    if (rows.affectedRows === 0) {
+      return {
+        statusCode: 500,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({ message: "internal server error" }),
+      };
+    }
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({ message: "success" }),
+    };
+  } catch (e) {
+    console.error(e);
+    return {
+      statusCode: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({ message: "internal server error" }),
+    };
+  }
+}
+
 export const detailHandler = async (event: APIGatewayEvent, context: Context): Promise<APIGatewayProxyResult> => {
   try {
     const req = event.queryStringParameters || JSON.parse(event.body || "{}");
@@ -187,6 +242,9 @@ export const detailHandler = async (event: APIGatewayEvent, context: Context): P
         break;
       case "post":
         response = await handlePost({ session, req });
+        break;
+      case "delete":
+        response = await handleDelete({ session, req });
         break;
       default:
         response = {
