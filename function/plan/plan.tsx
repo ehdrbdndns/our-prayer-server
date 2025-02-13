@@ -112,7 +112,7 @@ async function handleGet({
 
       const [lectures]: any = await promisePool.query(`
       SELECT
-        lecture_id, title, description
+        lecture_id, title, description, created_date
       FROM lecture
       WHERE plan_id = ?
         AND is_active = 1
