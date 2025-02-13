@@ -169,7 +169,7 @@ async function handlePut({
     const { user_id } = session;
     const { prayer_history_id, note } = req;
 
-    if (!prayer_history_id || !note) {
+    if (!prayer_history_id) {
       return {
         statusCode: 400,
         headers: {
