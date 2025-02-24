@@ -1,7 +1,7 @@
 import { APIGatewayEvent, APIGatewayProxyResult, Context } from "aws-lambda";
 import { generateToken, Payload, verifyToken } from 'customJwt';
 import { promisePool } from 'customMysql';
-import { LectureAudioType, Session } from "../dataType";
+import { AudioFileSystemType, LectureAudioType, Session } from "../dataType";
 
 const generateTokenByRefreshToken = async (refreshToken: string) => {
   try {
@@ -51,10 +51,12 @@ async function handleGet({
       SELECT 
         l.lecture_id, 
         l.bgm,
+        l.bgm_extension,
         la.lecture_audio_id, 
         la.audio,
         la.caption,
-        la.start_time
+        la.start_time,
+        la.extension
       FROM lecture l
 
         LEFT JOIN lecture_audio la 
@@ -63,7 +65,7 @@ async function handleGet({
 
       WHERE l.plan_id = ?
         AND l.is_active = 1
-    `, [plan_id]) as [(LectureAudioType & { bgm: string })[], unknown];
+    `, [plan_id]) as [LectureAudioType[], unknown];
 
     if (rows.length === 0) {
       return {
@@ -75,23 +77,14 @@ async function handleGet({
       };
     }
 
-    const lectureAudioList: {
-      [lecture_id: string]: {
-        audios: {
-          lecture_audio_id: string,
-          uri: string,
-          caption: string,
-          start_time: number
-        }[],
-        bgm: string
-      }
-    } = {};
+    const lectureAudioList: AudioFileSystemType = {};
 
     for (const row of rows) {
       if (!lectureAudioList[row.lecture_id]) {
         lectureAudioList[row.lecture_id] = {
           audios: [],
-          bgm: row.bgm
+          bgm: row.bgm,
+          bgmExtension: row.bgm_extension
         };
       }
 
@@ -100,7 +93,8 @@ async function handleGet({
           lecture_audio_id: row.lecture_audio_id,
           uri: row.audio,
           caption: row.caption,
-          start_time: row.start_time
+          start_time: row.start_time,
+          extension: row.extension
         });
       }
     }
