@@ -234,6 +234,12 @@ Resources:
             Path: /lecture/userAudio
             Method: POST
             RestApiId: !Ref ourprayer
+        ourprayerPOSTlecture:
+          Type: Api
+          Properties:
+            Path: /lecture
+            Method: POST
+            RestApiId: !Ref ourprayer
     # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-using-build-typescript.html
     Metadata:
       BuildMethod: esbuild
@@ -444,6 +450,12 @@ Resources:
               responses: {}
           /lecture:
             get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lecture.Arn}/invocations
+              responses: {}
+            post:
               x-amazon-apigateway-integration:
                 httpMethod: POST
                 type: aws_proxy

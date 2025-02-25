@@ -112,6 +112,78 @@ async function handleGet({
   }
 }
 
+async function handlePost({
+  session, req
+}: {
+  session: Session, req: { lecture_id: number }
+}): Promise<APIGatewayProxyResult> {
+  try {
+
+    const { lecture_id } = req;
+
+    if (!lecture_id) {
+      return {
+        statusCode: 400,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({ message: "bad request" }),
+      }
+    }
+
+    const [lecture] = await promisePool.query(`
+    SELECT
+      lecture_id, plan_id, time, title
+    FROM lecture
+
+    WHERE lecture_id = ?
+      AND is_active = 1
+    LIMIT 1
+    `, [lecture_id]) as [LectureType[], unknown];
+
+    if (lecture.length === 0) {
+      return {
+        statusCode: 404,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+        body: JSON.stringify({ message: "not found" }),
+      }
+    }
+
+    const [lectureAudios] = await promisePool.query(`
+    SELECT
+      caption, start_time, lecture_audio_id
+    FROM lecture_audio
+
+    WHERE lecture_id = ?
+      AND is_active = 1
+    `, [lecture_id]) as [LectureAudioType[], unknown];
+
+    const res = {
+      lecture: lecture[0],
+      lectureAudios
+    }
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify(res),
+    }
+  } catch (e) {
+    console.error(e);
+    return {
+      statusCode: 500,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+      },
+      body: JSON.stringify({ message: "internal server error" }),
+    };
+  }
+}
+
 export const lectureHandler = async (event: APIGatewayEvent, context: Context): Promise<APIGatewayProxyResult> => {
   try {
     const req = event.queryStringParameters || JSON.parse(event.body || "{}");
@@ -151,6 +223,9 @@ export const lectureHandler = async (event: APIGatewayEvent, context: Context): 
     switch (HttpMethod.toLowerCase()) {
       case "get":
         response = await handleGet({ session, req });
+        break;
+      case "post":
+        response = await handlePost({ session, req });
         break;
       default:
         response = {

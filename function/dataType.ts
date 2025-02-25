@@ -91,4 +91,21 @@ export interface LectureAudioType {
   start_time: number;
   is_active: boolean;
   audit_date: number;
+  bgm: string;
+  bgm_extension: string;
+  extension: string
+}
+
+export interface AudioFileSystemType {
+  [lecture_id: string]: {
+    audios: {
+      lecture_audio_id: string,
+      uri: string,
+      caption: string,
+      start_time: number,
+      extension: string,
+    }[],
+    bgm: string;
+    bgmExtension: string;
+  }
 }
