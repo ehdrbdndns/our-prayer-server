@@ -59,16 +59,11 @@ async function pushNotification({
 
   let chunks = expo.chunkPushNotifications(messages);
 
-  console.log("messages");
-  console.log(JSON.stringify(messages));
-
   let tickets: ExpoPushTicket[] = [];
   for (let chunk of chunks) {
     try {
       let ticketChunk = await expo.sendPushNotificationsAsync(chunk);
-      console.log("sednPushNotificationsAsync");
       tickets.push(...ticketChunk);
-      console.log(ticketChunk);
     } catch (error) {
       console.error(error);
     }
