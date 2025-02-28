@@ -109,3 +109,7 @@ export interface AudioFileSystemType {
     bgmExtension: string;
   }
 }
+
+export type QueueNameType = "notification";
+
+export type SQSMethod = "insert" | "update" | "delete";

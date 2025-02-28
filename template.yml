@@ -262,6 +262,9 @@ Resources:
       Environment:
         Variables:
           NODE_OPTIONS: '--enable-source-maps'
+          NOTIFICATION_QUEUE_NAME: !GetAtt notification.QueueName
+          NOTIFICATION_QUEUE_ARN: !GetAtt notification.Arn
+          NOTIFICATION_QUEUE_URL: !Ref notification
       MemorySize: 3008
       Timeout: 30
       Architectures:
@@ -306,6 +309,9 @@ Resources:
             Path: /question/reply
             Method: POST
             RestApiId: !Ref ourprayer
+      Policies:
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt notification.QueueName
     # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-using-build-typescript.html
     Metadata:
       BuildMethod: esbuild
@@ -564,6 +570,48 @@ Resources:
         AllowOrigin: '''*'''
         AllowHeaders: '''Authorization, Content-Type, Access-Control-Allow-Origin'''
         AllowMethods: '''POST, GET, OPTIONS'''
+  notification:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: notification
+      MessageRetentionPeriod: 345600
+  notificationTrigger:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: !Sub
+        - Stack ${AWS::StackName} Function ${ResourceName}
+        - ResourceName: notificationTrigger
+      CodeUri: ./function/notificationTrigger
+      Handler: handler.handler
+      Runtime: nodejs22.x
+      MemorySize: 3008
+      Timeout: 30
+      Tracing: Active
+      Layers:
+        - !Ref mysql2
+        - !Ref jwt
+      Events:
+        notification:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt notification.Arn
+            BatchSize: 1
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - handler.ts
+        External:
+          - '@aws-sdk/*'
+          - aws-sdk
+          - customMysql
+          - customJwt
+          - esbuild
+  notificationTriggerLogGroup:
+    Type: AWS::Logs::LogGroup
+    DeletionPolicy: Retain
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${notificationTrigger}
 Metadata:
   AWS::Composer::Groups:
     Group:
@@ -572,7 +620,7 @@ Metadata:
         - jwt
         - mysql2
     Group2:
-      Label: Function
+      Label: Server Function
       Members:
         - user
         - bible
