@@ -111,3 +111,5 @@ export interface AudioFileSystemType {
 }
 
 export type QueueNameType = "notification";
+
+export type SQSMethod = "insert" | "update" | "delete";
