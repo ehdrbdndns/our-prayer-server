@@ -109,3 +109,5 @@ export interface AudioFileSystemType {
     bgmExtension: string;
   }
 }
+
+export type QueueNameType = "notification";
