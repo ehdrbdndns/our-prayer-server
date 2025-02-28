@@ -18,8 +18,21 @@ const firstNames = [
 ];
 
 function generateRandomChristianName(): string {
-  const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
-  const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+  let adjective: string;
+  let firstName: string;
+
+  while (true) {
+    adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const maxFirstNameLength = 7 - adjective.length - 1 // for 1 space;
+
+    const filteredFirstNames = firstNames.filter(name => name.length <= maxFirstNameLength);
+
+    if (filteredFirstNames.length > 0) {
+      firstName = filteredFirstNames[Math.floor(Math.random() * filteredFirstNames.length)];
+      break;
+    }
+  }
+
   return `${adjective} ${firstName}`;
 }
 
