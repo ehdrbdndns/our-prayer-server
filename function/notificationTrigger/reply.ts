@@ -43,8 +43,8 @@ const handleInsert = async (body: string) => {
     // send notification for admin by device token
     await pushNotification({
       pushTokens: admins.map((user: { expo_push_token: string }) => user.expo_push_token),
-      body: `${users[0].name}님이 질문을 등록했습니다.`,
-      title: '질문 등록 알림',
+      body: `${users[0].name}님이 답변을 등록했습니다.`,
+      title: '질문 답변 알림',
       subtitle: '',
       data: {},
       sound: 'default',
@@ -57,7 +57,7 @@ const handleInsert = async (body: string) => {
   }
 }
 
-export const questionHandler = async ({ method, body }: {
+export const replyHandler = async ({ method, body }: {
   method: SQSMethod;
   body: string;
 }) => {

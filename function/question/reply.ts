@@ -4,6 +4,9 @@ import { promisePool } from 'customMysql';
 import { Session } from "../dataType";
 import { v4 as uuidv4 } from 'uuid';
 import { ResultSetHeader } from "mysql2";
+import { NOTIFICATION_QUEUE_URL } from "./keys";
+import { SendMessageCommand } from "@aws-sdk/client-sqs";
+import { SQS_CLIENT } from "./handler";
 
 const generateTokenByRefreshToken = async (refreshToken: string) => {
   try {
@@ -147,6 +150,36 @@ async function handlePost({
     }
 
     await conn.commit();
+
+    try {
+      const queueUrl = NOTIFICATION_QUEUE_URL;
+      const messageBody = JSON.stringify({ user_id })
+
+      if (!queueUrl) {
+        throw new Error('Failed to get queue url');
+      }
+
+      const sendMessageCommand = new SendMessageCommand({
+        QueueUrl: queueUrl,
+        MessageAttributes: {
+          Type: {
+            DataType: "String",
+            StringValue: "reply"
+          },
+          Method: {
+            DataType: "String",
+            StringValue: "insert"
+          }
+        },
+        MessageBody: messageBody
+      })
+
+      await SQS_CLIENT.send(sendMessageCommand);
+    } catch (e) {
+      console.error(e);
+      console.error('Failed to send message to SQS of notification');
+    }
+
 
     return {
       statusCode: 200,

@@ -1,12 +1,12 @@
 import { APIGatewayEvent, APIGatewayProxyResult, Context } from "aws-lambda";
 import { generateToken, Payload, verifyToken } from 'customJwt';
 import { promisePool } from 'customMysql';
-import { QueueNameType, Session } from "../dataType";
+import { Session } from "../dataType";
 import { v4 as uuidv4 } from 'uuid';
 import { ResultSetHeader } from "mysql2";
-import { GetQueueUrlCommand, SendMessageCommand, SQSClient } from "@aws-sdk/client-sqs";
-
-const SQS_CLIENT = new SQSClient({ region: 'ap-northeast-2' });
+import { GetQueueUrlCommand, SendMessageCommand } from "@aws-sdk/client-sqs";
+import { NOTIFICATION_QUEUE_URL } from "./keys";
+import { SQS_CLIENT } from "./handler";
 
 async function getQueueUrl(queueName: string): Promise<string> {
   const getQueueUrlCommand = new GetQueueUrlCommand({
@@ -136,8 +136,7 @@ async function handlePost({
 
     // Send notification to admin
     try {
-      const queueName: QueueNameType = "notification";
-      const queueUrl = await getQueueUrl(queueName);
+      const queueUrl = NOTIFICATION_QUEUE_URL;
       const messageBody = JSON.stringify({ user_id })
 
       if (!queueUrl) {
