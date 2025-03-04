@@ -1,6 +1,7 @@
 import { SQSHandler, SQSEvent, SQSRecord } from "aws-lambda";
 import { questionHandler } from "./question";
 import { SQSMethod } from "../dataType";
+import { replyHandler } from "./reply";
 
 const router: {
   [key: string]: ({
@@ -11,6 +12,7 @@ const router: {
   }) => Promise<void>
 } = {
   "question": questionHandler,
+  "reply": replyHandler
 }
 
 export const handler: SQSHandler = async (event: SQSEvent) => {

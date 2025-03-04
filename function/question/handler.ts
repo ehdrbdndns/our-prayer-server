@@ -1,6 +1,9 @@
 import { Context, APIGatewayEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { questionHandler } from './question';
 import { replyHandler } from './reply';
+import { SQSClient } from '@aws-sdk/client-sqs';
+
+export const SQS_CLIENT = new SQSClient({ region: 'ap-northeast-2' });
 
 const router: { [key: string]: (event: APIGatewayEvent, context: Context) => Promise<APIGatewayProxyResult> } = {
   "/question": questionHandler,

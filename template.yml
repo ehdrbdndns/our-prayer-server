@@ -314,6 +314,7 @@ Resources:
             QueueName: !GetAtt notification.QueueName
     # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-using-build-typescript.html
     Metadata:
+      Minify: false
       BuildMethod: esbuild
       BuildProperties:
         EntryPoints:
