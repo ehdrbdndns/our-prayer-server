@@ -110,6 +110,16 @@ export interface AudioFileSystemType {
   }
 }
 
+export interface AppInfoType {
+  app_info_id: string;
+  android_version: string;
+  ios_version: string;
+  android_app_link: string;
+  ios_app_link: string;
+  updated_date: string;
+  created_date: string;
+}
+
 export type QueueNameType = "notification";
 
 export type SQSMethod = "insert" | "update" | "delete";
