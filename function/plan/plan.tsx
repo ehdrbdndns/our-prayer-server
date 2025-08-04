@@ -112,7 +112,7 @@ async function handleGet({
 
       const [lectures]: any = await promisePool.query(`
       SELECT
-        lecture_id, title, description
+        lecture_id, title, description, time
         , UNIX_TIMESTAMP(created_date) AS created_date
       FROM lecture
       WHERE plan_id = ?
