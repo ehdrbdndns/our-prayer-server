@@ -117,6 +117,7 @@ async function handleGet({
       FROM lecture
       WHERE plan_id = ?
         AND is_active = 1
+      ORDER BY title ASC
       `, [plan_id]);
 
       return {
