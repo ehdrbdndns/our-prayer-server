@@ -65,9 +65,11 @@ async function handleGet({
     `;
 
     const queryParams: (string | number)[] = [session.user_id];
+
     if (prayer_history_id !== undefined) {
       queryParams.push(prayer_history_id);
     }
+
     if (historyRange !== undefined) {
       queryParams.push(historyRange);
     }
