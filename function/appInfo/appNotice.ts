@@ -8,8 +8,13 @@ async function handleGet(): Promise<APIGatewayProxyResult> {
   try {
 
     const [rows] = await promisePool.query(`
-    SELECT * FROM app_notice
+    SELECT * 
+    FROM app_notice
+    WHERE is_active = 1
+    ORDER BY priority ASC, created_date DESC
     `, []) as [AppInfoType[], unknown];
+
+    console.log(rows)
 
     if (rows.length === 0) {
       return {
