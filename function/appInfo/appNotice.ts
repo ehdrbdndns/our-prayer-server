@@ -14,8 +14,6 @@ async function handleGet(): Promise<APIGatewayProxyResult> {
     ORDER BY priority ASC, created_date DESC
     `, []) as [AppInfoType[], unknown];
 
-    console.log(rows)
-
     if (rows.length === 0) {
       return {
         statusCode: 404,
@@ -32,7 +30,7 @@ async function handleGet(): Promise<APIGatewayProxyResult> {
         "Access-Control-Allow-Origin": "*",
       },
       body: JSON.stringify({
-        ...rows[0]
+        ...rows
       }),
     }
 
