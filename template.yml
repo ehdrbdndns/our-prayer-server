@@ -403,6 +403,12 @@ Resources:
             Path: /appInfo
             Method: GET
             RestApiId: !Ref ourprayer
+        ourprayerGETappNotice:
+          Type: Api
+          Properties:
+            Path: /appNotice
+            Method: GET
+            RestApiId: !Ref ourprayer
     # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-using-build-typescript.html
     Metadata:
       BuildMethod: esbuild
@@ -601,6 +607,13 @@ Resources:
                 uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lecture.Arn}/invocations
               responses: {}
           /appInfo:
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri: !Sub arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${appInfo.Arn}/invocations
+              responses: {}
+          /appNotice:
             get:
               x-amazon-apigateway-integration:
                 httpMethod: POST
