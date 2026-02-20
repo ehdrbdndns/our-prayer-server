@@ -1,8 +1,8 @@
-# Our Prayer Server
+# "우리의 기도" 서버
 
-실사용 기도/묵상 앱의 백엔드 서버입니다.
+우리의 기도 앱의 백엔드 서버입니다.
 
-- 운영 기간: 약 2년
+- 운영 기간: 2025.02 ~ 운영 중
 - MAU: 100+
 - 주요 기술: AWS Serverless, Node.js 22, MySQL, SQS, Expo Push
 
