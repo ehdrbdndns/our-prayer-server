@@ -38,20 +38,47 @@
 flowchart LR
     Client["Mobile App"] --> APIGW["API Gateway: ourprayer"]
 
-    APIGW --> USER["Lambda: user"]
-    APIGW --> BIBLE["Lambda: bible"]
-    APIGW --> HISTORY["Lambda: history"]
-    APIGW --> LECTURE["Lambda: lecture"]
-    APIGW --> QUESTION["Lambda: question"]
-    APIGW --> PLAN["Lambda: plan"]
-    APIGW --> APPINFO["Lambda: appInfo"]
+    subgraph AWS["AWS"]
+      direction TB
 
-    QUESTION --> SQS["SQS: notification"]
-    SQS --> NTF["Lambda: notificationTrigger"]
-    NTF --> EXPO["Expo Push Service"]
-    EXPO --> ADMIN["Admin Device"]
+      subgraph FN["Lambda Functions"]
+        direction TB
+        USER["user"]
+        BIBLE["bible"]
+        HISTORY["history"]
+        LECTURE["lecture"]
+        QUESTION["question"]
+        PLAN["plan"]
+        APPINFO["appInfo"]
+        NTF["notificationTrigger (SQS Consumer)"]
+      end
 
-    USER --> MYSQL["MySQL"]
+      SQS["SQS: notification"]
+    end
+
+    subgraph ONPREM["On-Premises (Raspberry Pi 5)"]
+      direction TB
+      MYSQL["MySQL"]
+    end
+
+    subgraph TARGET["Push Targets"]
+      direction TB
+      ADMIN["Admin Device"]
+      UDEVICE["User Device"]
+    end
+
+    APIGW --> USER
+    APIGW --> BIBLE
+    APIGW --> HISTORY
+    APIGW --> LECTURE
+    APIGW --> QUESTION
+    APIGW --> PLAN
+    APIGW --> APPINFO
+
+    QUESTION --> SQS
+    SQS --> NTF
+
+    USER --> MYSQL
     BIBLE --> MYSQL
     HISTORY --> MYSQL
     LECTURE --> MYSQL
@@ -60,22 +87,17 @@ flowchart LR
     APPINFO --> MYSQL
     NTF --> MYSQL
 
-    JWTLAYER["Layer: jwt"] -.shared.-> USER
-    JWTLAYER -.shared.-> BIBLE
-    JWTLAYER -.shared.-> HISTORY
-    JWTLAYER -.shared.-> LECTURE
-    JWTLAYER -.shared.-> QUESTION
-    JWTLAYER -.shared.-> PLAN
-
-    MYSQLLAYER["Layer: mysql2"] -.shared.-> USER
-    MYSQLLAYER -.shared.-> BIBLE
-    MYSQLLAYER -.shared.-> HISTORY
-    MYSQLLAYER -.shared.-> LECTURE
-    MYSQLLAYER -.shared.-> QUESTION
-    MYSQLLAYER -.shared.-> PLAN
-    MYSQLLAYER -.shared.-> APPINFO
-    MYSQLLAYER -.shared.-> NTF
+    NTF --> EXPO["Expo Push Service"]
+    EXPO --> ADMIN
+    EXPO --> UDEVICE
 ```
+
+레이어는 선 연결 대신 매핑 표로 정리했습니다.
+
+| Layer | 적용 Function |
+| --- | --- |
+| `jwt` | `user`, `bible`, `history`, `lecture`, `question`, `plan`, `appInfo`, `notificationTrigger` |
+| `mysql2` | `user`, `bible`, `history`, `lecture`, `question`, `plan`, `appInfo`, `notificationTrigger` |
 
 ### 2.3 질문/답변 알림 시퀀스
 
@@ -99,6 +121,8 @@ sequenceDiagram
     W->>E: Send push notification
     E->>A: Deliver notification
 ```
+
+현재 `question/reply` 워커 구현은 관리자(`role = 'admin'`) 토큰 대상으로 동작합니다.
 
 관련 코드 위치:
 - `function/question/question.ts`
