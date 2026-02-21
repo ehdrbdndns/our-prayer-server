@@ -5,6 +5,8 @@
 - 운영 기간: 2025.02 ~ 운영 중
 - MAU: 100+
 - 주요 기술: AWS Serverless, Node.js 22, MySQL, SQS, Expo Push
+- ios : https://apple.co/4qQupBh
+- andorid : http://bit.ly/49RsfLu
 
 ## 1. 프로젝트 개요
 
@@ -144,11 +146,13 @@ sequenceDiagram
 
 ### 3.2 AWS 클라우드 월평균 비용 비교 (KRW/일)
 
-| 단계 | 월평균 비용($) | 직전 단계 대비 증감 | 전환 이유 |
-| --- | --- | --- | --- |
-| (AWS) RDS + Lambda + SQS + S3 | 26.67 | - | - |
-| (AWS) EC2(MySQL) + Lambda + SQS + S3 | 16.12 | -10.55 USD(약 -39.6%) | DB 운영비 절감 시도 |
-| (온프레미스 - Raspberry Pi 5) MySQL, (AWS) Lambda + SQS + S3 | 0.1 | -16.02 USD(약 -99%) | DB 운영비 절감 시도 |
+| 단계 | 월평균 비용($) | 직전 단계 대비 증감 | 전환 이유 | 블로그
+| --- | --- | --- | --- | --- |
+| (AWS) RDS + Lambda + SQS + S3 | 26.67 | - | - | - |
+| (AWS) EC2(MySQL) + Lambda + SQS + S3 | 16.12 | -10.55 USD(약 -39.6%) | DB 운영비 절감 시도 | 👉 [AWS 클라우드 비용 36% 줄였던 경험](https://medium.com/@ehdrbdndns/aws-%ED%81%B4%EB%9D%BC%EC%9A%B0%EB%93%9C-%EB%B9%84%EC%9A%A9-36-%EC%A4%84%EC%9D%B4%EA%B8%B0-free-tier-%EC%A2%85%EB%A3%8C-%ED%9B%84-rds%EB%A5%BC-ec2-docker-mysql%EB%A1%9C-%EC%98%AE%EA%B8%B0%EA%B8%B0-418b9f7c1011) |
+| (온프레미스 - Raspberry Pi 5) MySQL, (AWS) Lambda + SQS + S3 | 0.1 | -16.02 USD(약 -99%) | DB 운영비 절감 시도 | - | 
+
+
 
 ## 4. 핵심 구현 딥다이브
 
@@ -210,119 +214,9 @@ sequenceDiagram
 - `plan` 1:N `lecture`
 - `user` 1:N `prayer_history`, `lecture` 1:N `prayer_history`
 
-### ERD 이미지 슬롯 1 (전체 관계도)
+👉 [ERD 설계도(전체 관계도)](https://www.erdcloud.com/d/TsdFZ6aDmT3tK9eBx)
 
-![ERD Overview](docs/images/erd-overview.png)
-
-### ERD 이미지 슬롯 2 (질문/답변 도메인)
-
-![ERD Question Reply](docs/images/erd-question-reply.png)
-
-## 6. API 부록
-
-`template.yml` 기준으로 정의된 엔드포인트입니다.
-
-### 6.1 User
-
-| Method | Path | Auth | Function |
-| --- | --- | --- | --- |
-| POST | `/user/auth` | No | `user` |
-| GET | `/user` | Yes | `user` |
-| PUT | `/user` | Yes | `user` |
-| DELETE | `/user` | Yes | `user` |
-
-### 6.2 Bible
-
-| Method | Path | Auth | Function |
-| --- | --- | --- | --- |
-| GET | `/bible` | Yes | `bible` |
-
-### 6.3 History
-
-| Method | Path | Auth | Function |
-| --- | --- | --- | --- |
-| GET | `/history` | Yes | `history` |
-| POST | `/history` | Yes | `history` |
-| PUT | `/history` | Yes | `history` |
-| DELETE | `/history` | Yes | `history` |
-| GET | `/history/detail` | Yes | `history` |
-| POST | `/history/detail` | Yes | `history` |
-| DELETE | `/history/detail` | Yes | `history` |
-
-### 6.4 Lecture
-
-| Method | Path | Auth | Function |
-| --- | --- | --- | --- |
-| GET | `/lecture` | Yes | `lecture` |
-| POST | `/lecture` | Yes | `lecture` |
-| GET | `/lecture/audio` | Yes | `lecture` |
-| POST | `/lecture/user/audio` | Yes | `lecture` |
-| GET | `/lecture/userAudio` | Yes | `lecture` |
-| POST | `/lecture/userAudio` | Yes | `lecture` |
-
-### 6.5 Plan
-
-| Method | Path | Auth | Function |
-| --- | --- | --- | --- |
-| GET | `/plan` | Yes | `plan` |
-| GET | `/plan/user` | Yes | `plan` |
-| POST | `/plan/user` | Yes | `plan` |
-| DELETE | `/plan/user` | Yes | `plan` |
-
-### 6.6 Question
-
-| Method | Path | Auth | Function |
-| --- | --- | --- | --- |
-| GET | `/question` | Yes | `question` |
-| POST | `/question` | Yes | `question` |
-| PUT | `/question` | Yes | `question` |
-| DELETE | `/question` | Yes | `question` |
-| GET | `/question/reply` | Yes | `question` |
-| POST | `/question/reply` | Yes | `question` |
-
-### 6.7 App Info / Notice
-
-| Method | Path | Auth | Function |
-| --- | --- | --- | --- |
-| GET | `/appInfo` | No | `appInfo` |
-| GET | `/appNotice` | No | `appInfo` |
-
-### 6.8 이벤트 인터페이스 (SQS)
-
-| 항목 | 타입 | 값 |
-| --- | --- | --- |
-| Message Attribute `Type` | String | `question` or `reply` |
-| Message Attribute `Method` | String | `insert` |
-| Message Body | JSON string | `{"user_id":"..."}` |
-
-## 7. 회고 및 개선 계획
-
-### 7.1 현재 한계
-
-1. 엔드포인트/인증 처리 로직이 함수별로 반복됩니다.
-2. 저장소 기준 자동화 테스트 코드가 없습니다.
-3. 비용 비교 수치와 블로그 URL, 앱스토어 URL은 아직 미입력 상태입니다.
-
-### 7.2 다음 단계
-
-1. 인증/응답 포맷 공통 모듈화
-2. 핵심 사용자 플로우 통합 테스트 추가
-3. 비용 실측치, 블로그 링크, ERD 이미지 반영 완료
-
-## 8. 외부 링크
-
-### 8.1 앱 스토어
-
-- iOS: 미수집
-- Android: 미수집
-
-### 8.2 비용 절감 관련 블로그
-
-- blog-01: RDS -> EC2 + Docker + MySQL 전환 배경/실행 (URL 미수집)
-- blog-02: EC2 -> 온프레미스 (Raspberry Pi 5) 전환 배경/실행 (URL 미수집)
-- blog-03: 비용/운영 회고 (URL 미수집)
-
-## 9. 참고 코드 인덱스
+## 6. 참고 코드 인덱스
 
 - 인프라/엔드포인트 정의: `template.yml`
 - 배포/빌드 설정: `samconfig.toml`
