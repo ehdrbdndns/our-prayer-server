@@ -12,6 +12,9 @@
 
 모바일 앱의 핵심 사용자 흐름(인증, 플랜/강의 조회, 기도 기록, 질문/답변)을 안정적으로 제공하는 서버를 설계하고 운영했습니다.
 
+서버 아키텍처는 AWS Serverless(API Gateway + Lambda + SQS)를 채택했습니다. 
+1인 개발 특성상 서버 증설, 런타임 운영, 장애 대응 같은 클라우드 인프라 관리 부담이 크기 때문에, 인프라 운영 포인트를 줄이고 기능 개발에 집중할 수 있는 구조를 우선 선택했습니다.
+
 주요 기능:
 - 사용자 인증 및 세션 관리
 - 기도 플랜/강의/오디오 조회
@@ -151,7 +154,6 @@ sequenceDiagram
 | (AWS) RDS + Lambda + SQS + S3 | 26.67 | - | - | - |
 | (AWS) EC2(MySQL) + Lambda + SQS + S3 | 16.12 | -10.55 USD(약 -39.6%) | DB 운영비 절감 시도 | 👉 [AWS 클라우드 비용 36% 줄였던 경험](https://medium.com/@ehdrbdndns/aws-%ED%81%B4%EB%9D%BC%EC%9A%B0%EB%93%9C-%EB%B9%84%EC%9A%A9-36-%EC%A4%84%EC%9D%B4%EA%B8%B0-free-tier-%EC%A2%85%EB%A3%8C-%ED%9B%84-rds%EB%A5%BC-ec2-docker-mysql%EB%A1%9C-%EC%98%AE%EA%B8%B0%EA%B8%B0-418b9f7c1011) |
 | (온프레미스 - Raspberry Pi 5) MySQL, (AWS) Lambda + SQS + S3 | 0.1 | -16.02 USD(약 -99%) | DB 운영비 절감 시도 | - | 
-
 
 
 ## 4. 핵심 구현 딥다이브
