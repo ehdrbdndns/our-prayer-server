@@ -39,70 +39,7 @@
 
 ### 2.2 아키텍처 다이어그램
 
-```mermaid
-flowchart LR
-    Client["Mobile App"] --> APIGW["API Gateway: ourprayer"]
-
-    subgraph AWS["AWS"]
-      direction TB
-
-      subgraph FN["Lambda Functions"]
-        direction TB
-        USER["user"]
-        BIBLE["bible"]
-        HISTORY["history"]
-        LECTURE["lecture"]
-        QUESTION["question"]
-        PLAN["plan"]
-        APPINFO["appInfo"]
-        NTF["notificationTrigger (SQS Consumer)"]
-      end
-
-      SQS["SQS: notification"]
-    end
-
-    subgraph ONPREM["On-Premises (Raspberry Pi 5)"]
-      direction TB
-      MYSQL["MySQL"]
-    end
-
-    subgraph TARGET["Push Targets"]
-      direction TB
-      ADMIN["Admin Device"]
-      UDEVICE["User Device"]
-    end
-
-    APIGW --> USER
-    APIGW --> BIBLE
-    APIGW --> HISTORY
-    APIGW --> LECTURE
-    APIGW --> QUESTION
-    APIGW --> PLAN
-    APIGW --> APPINFO
-
-    QUESTION --> SQS
-    SQS --> NTF
-
-    USER --> MYSQL
-    BIBLE --> MYSQL
-    HISTORY --> MYSQL
-    LECTURE --> MYSQL
-    QUESTION --> MYSQL
-    PLAN --> MYSQL
-    APPINFO --> MYSQL
-    NTF --> MYSQL
-
-    NTF --> EXPO["Expo Push Service"]
-    EXPO --> ADMIN
-    EXPO --> UDEVICE
-```
-
-레이어는 선 연결 대신 매핑 표로 정리했습니다.
-
-| Layer | 적용 Function |
-| --- | --- |
-| `jwt` | `user`, `bible`, `history`, `lecture`, `question`, `plan`, `appInfo`, `notificationTrigger` |
-| `mysql2` | `user`, `bible`, `history`, `lecture`, `question`, `plan`, `appInfo`, `notificationTrigger` |
+<img width="1341" height="681" alt="ourprayer drawio" src="https://github.com/user-attachments/assets/23788f9a-b2bf-4f13-bbda-03bff24658d6" />
 
 ### 2.3 질문/답변 알림 시퀀스
 
@@ -202,21 +139,9 @@ sequenceDiagram
 
 ## 5. 데이터 모델 (ERD)
 
-핵심 테이블:
-- `user`, `user_state`, `refresh_token`
-- `question`, `question_reply`
-- `plan`, `lecture`
-- `prayer_history`
+<img width="981" height="469" alt="image" src="https://github.com/user-attachments/assets/7d8d354d-6c10-44d3-b608-2166d6b86f73" />
 
-관계 요약:
-- `user` 1:1 `user_state`
-- `user` 1:N `refresh_token`
-- `user` 1:N `question`
-- `question` 1:N `question_reply`
-- `plan` 1:N `lecture`
-- `user` 1:N `prayer_history`, `lecture` 1:N `prayer_history`
-
-👉 [ERD 설계도(전체 관계도)](https://www.erdcloud.com/d/TsdFZ6aDmT3tK9eBx)
+👉 [ERD 설계도 확인하기(전체 관계도)](https://www.erdcloud.com/d/TsdFZ6aDmT3tK9eBx)
 
 ## 6. 참고 코드 인덱스
 
